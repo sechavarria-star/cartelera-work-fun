@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartelera · Work &amp; Fun '26</title>
+<style>
+  :root{
+    --hp-blue:#024AD8;
+    --hp-blue-dark:#0233a0;
+    --hp-orange:#FF5050;
+    --hp-storm:#568393;
+    --ink:#0b1220;
+    --paper:#0a1b3f;            /* fondo oscuro de pantalla */
+    --paper-2:#06122c;
+    --white:#ffffff;
+    --muted:#aab8d6;
+    --font:"HP Simplified","Helvetica Neue",Arial,Helvetica,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;width:100%;overflow:hidden;background:#000}
+  body{
+    font-family:var(--font);
+    color:var(--white);
+    -webkit-font-smoothing:antialiased;
+    cursor:none;                 /* oculta el mouse en modo pantalla */
+  }
+
+  /* ---------- ESCENARIO 16:9 que llena cualquier pantalla ---------- */
+  #stage{
+    position:fixed;inset:0;
+    background:radial-gradient(120% 120% at 80% -10%, #0c2a66 0%, var(--paper) 45%, var(--paper-2) 100%);
+    display:grid;
+    grid-template-rows:auto auto 1fr auto auto;
+  }
+  /* franja de marca HP arriba */
+  .stripe{height:8px;flex:0 0 auto;background:linear-gradient(90deg,var(--hp-blue) 0 33%,var(--hp-storm) 33% 66%,var(--hp-orange) 66% 100%)}
+
+  /* ---------- BARRA SUPERIOR ---------- */
+  .topbar{
+    display:flex;align-items:center;gap:22px;
+    padding:26px 56px 10px;
+  }
+  .logo-badge{background:#fff;border-radius:14px;padding:10px 12px;display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+  .logo-badge img{height:46px;display:block}
+  .brandtxt{line-height:1.1}
+  .brandtxt .team{font-size:30px;font-weight:700;letter-spacing:.3px}
+  .brandtxt .team .amp{color:var(--hp-orange)}
+  .brandtxt .sub{font-size:14px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:4px}
+  .right{margin-left:auto;display:flex;align-items:center;gap:36px}
+  .clockbox{text-align:right}
+  .wx{display:flex;align-items:center;gap:14px}
+  .wx-ic{font-size:46px;line-height:1}
+  .wx-meta{line-height:1.1}
+  .wx-temp{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+  .wx-city{font-size:13px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+  .clockbox .time{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+  .clockbox .date{font-size:15px;color:var(--muted);text-transform:capitalize;margin-top:4px}
+
+  /* ---------- ÁREA DE SLIDES ---------- */
+  #slides{position:relative;overflow:hidden}
+  .slide{
+    position:absolute;inset:0;
+    padding:18px 64px 8px;
+    display:flex;flex-direction:column;justify-content:center;
+    opacity:0;transform:scale(1.04);
+    transition:opacity .7s ease, transform .9s ease;
+    pointer-events:none;
+  }
+  .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:12px;
+    font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+    color:#fff;margin-bottom:18px;
+  }
+  .eyebrow .dot{width:14px;height:14px;border-radius:50%;background:var(--hp-orange);box-shadow:0 0 0 6px rgba(255,80,80,.18)}
+  .slide h1{font-size:64px;line-height:1.05;letter-spacing:-1px;margin-bottom:14px}
+  .slide .lead{font-size:26px;color:var(--muted);max-width:60ch}
+
+  /* COVER */
+  .cover{align-items:center;text-align:center}
+  .cover .hello{font-size:24px;letter-spacing:6px;text-transform:uppercase;color:var(--hp-storm);font-weight:700;margin-bottom:18px}
+  .cover h1{font-size:104px;line-height:1}
+  .cover h1 .amp{color:var(--hp-orange)}
+  .cover .tag{font-size:30px;color:var(--muted);margin-top:18px}
+  .cover .chips{margin-top:38px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:12px 24px;font-size:20px;font-weight:600}
+  .chip.blue{background:var(--hp-blue)}
+  .chip.orange{background:var(--hp-orange)}
+
+  /* AGENDA / LISTA */
+  .rows{display:flex;flex-direction:column;gap:16px;margin-top:8px}
+  .row{
+    display:flex;align-items:center;gap:26px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;padding:20px 28px;
+  }
+  .row .when{font-size:30px;font-weight:700;color:var(--hp-orange);min-width:170px;font-variant-numeric:tabular-nums}
+  .row .what{font-size:28px;font-weight:600}
+  .row .where{margin-left:auto;font-size:20px;color:var(--muted)}
+
+  /* ANUNCIOS / BULLETS */
+  .bullets{display:flex;flex-direction:column;gap:22px;margin-top:10px}
+  .bullets li{display:flex;align-items:flex-start;gap:22px;list-style:none}
+  .bullets .ic{flex:0 0 auto;width:58px;height:58px;border-radius:16px;display:grid;place-items:center;font-size:30px;background:var(--hp-blue)}
+  .bullets li:nth-child(3n+2) .ic{background:var(--hp-orange)}
+  .bullets li:nth-child(3n+3) .ic{background:var(--hp-storm)}
+  .bullets .bt{font-size:30px;font-weight:700}
+  .bullets .bd{font-size:22px;color:var(--muted);margin-top:4px}
+
+  /* COUNTDOWN */
+  .count{align-items:center;text-align:center}
+  .count .units{display:flex;gap:30px;margin-top:26px}
+  .count .u{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:26px 34px;min-width:170px}
+  .count .u .n{font-size:88px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+  .count .u .l{font-size:18px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:10px}
+
+  /* QUOTE */
+  .quote{align-items:center;text-align:center}
+  .quote blockquote{font-size:54px;line-height:1.18;font-weight:700;max-width:24ch;position:relative}
+  .quote blockquote::before{content:"\201C";color:var(--hp-orange);font-size:120px;line-height:0;position:absolute;left:-60px;top:34px}
+  .quote .by{margin-top:30px;font-size:24px;color:var(--muted)}
+
+  /* LOGO HP en cada slide (marca de agua, esquina sup. derecha) */
+  .slide-wm{position:absolute;top:18px;right:60px;z-index:4;background:#fff;border-radius:12px;padding:8px 11px;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .slide-wm img{height:34px;display:block}
+
+  /* CLIMA */
+  .clima .wxbig{display:flex;align-items:center;gap:46px;margin-top:14px;flex-wrap:wrap}
+  .clima .wxbig-ic{font-size:130px;line-height:1}
+  .clima .wxbig-temp{font-size:120px;font-weight:700;line-height:.9;font-variant-numeric:tabular-nums}
+  .clima .wxbig-cond{font-size:30px;color:var(--muted);margin-top:8px}
+  .clima .wxbig-side{display:grid;grid-template-columns:1fr 1fr;gap:16px 40px;margin-left:8px}
+  .clima .wxbig-side .it{display:flex;flex-direction:column}
+  .clima .wxbig-side .it b{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+  .clima .wxbig-side .it small{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+  /* CUMPLEAÑOS */
+  .cumples{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px}
+  .cu{display:flex;align-items:center;gap:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:18px 26px;min-width:300px}
+  .cu-day{display:grid;place-items:center;width:64px;height:64px;border-radius:16px;background:var(--hp-orange);font-size:30px;font-weight:700;flex:0 0 auto}
+  .cu-name{font-size:28px;font-weight:600}
+  .cu-empty{font-size:26px;color:var(--muted);margin-top:14px}
+
+  /* FOTO a pantalla completa */
+  .foto{padding:0}
+  .foto .foto-bg{position:absolute;inset:0;background:var(--img) center/cover no-repeat,#0c2a66}
+  .foto::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(4,12,32,.92) 0%,rgba(4,12,32,.05) 50%,rgba(4,12,32,.30) 100%)}
+  .foto .foto-cap{position:absolute;left:64px;bottom:60px;z-index:2;max-width:70%}
+  .foto .foto-t{font-size:56px;font-weight:700;line-height:1.05}
+  .foto .foto-d{font-size:24px;color:#d7e0f5;margin-top:10px}
+
+  /* ---------- PIE / PROGRESO ---------- */
+  .footer{display:flex;align-items:center;gap:18px;padding:14px 56px 22px}
+  .dots{display:flex;gap:10px}
+  .dots i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.22);transition:all .3s}
+  .dots i.on{background:var(--hp-orange);width:34px;border-radius:6px}
+  .footer .tick{margin-left:auto;font-size:15px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+  .progress{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.08)}
+  .progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--hp-blue),var(--hp-orange))}
+
+  /* pista de control discreta (solo aparece al mover el mouse) */
+  .help{position:fixed;left:56px;bottom:34px;font-size:13px;color:rgba(255,255,255,.4);opacity:0;transition:opacity .3s}
+  body.show-cursor{cursor:default}
+  body.show-cursor .help{opacity:1}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="stripe"></div>
+
+  <header class="topbar">
+    <div class="logo-badge"><img src="assets/hp-logo.png" alt="HP" onerror="this.style.display='none'"></div>
+    <div class="brandtxt">
+      <div class="team">Work <span class="amp">&amp;</span> Fun '26</div>
+      <div class="sub">HP Argentina</div>
+    </div>
+    <div class="right">
+      <div class="wx" id="wx" hidden>
+        <div class="wx-ic" id="wxIc">⛅</div>
+        <div class="wx-meta">
+          <div class="wx-temp" id="wxTemp">--°</div>
+          <div class="wx-city">Buenos Aires</div>
+        </div>
+      </div>
+      <div class="clockbox">
+        <div class="time" id="clock">--:--</div>
+        <div class="date" id="today">—</div>
+      </div>
+    </div>
+  </header>
+
+  <section id="slides">
+    <div class="slide-wm"><img src="assets/hp-logo.png" alt="HP" onerror="this.parentNode.style.display='none'"></div>
+    <!-- las slides se inyectan por JS -->
+  </section>
+
+  <footer class="footer">
+    <div class="dots" id="dots"></div>
+    <div class="tick">Work &amp; Fun '26</div>
+  </footer>
+
+  <div class="progress"><span id="bar"></span></div>
+</div>
+<div class="help">Flechas ← → cambian de slide · barra espaciadora pausa · F11 pantalla completa</div>
+
+<script>
+/* =================================================================
+   CONTENIDO DE LA CARTELERA  ·  Work & Fun '26
+   -----------------------------------------------------------------
+   Editá SOLO este bloque para cambiar lo que se ve.
+   Cada slide es un objeto. Tipos disponibles:
+     "cover"     portada grande del equipo
+     "agenda"    lista de horarios (items: {when, what, where})
+     "anuncios"  lista de avisos con ícono (items: {icon, title, desc})
+     "countdown" cuenta regresiva a una fecha (target: "2026-12-20T18:00")
+     "quote"     frase destacada (text, by)
+     "clima"     clima de Buenos Aires EN VIVO (solo si la pantalla tiene internet;
+                 si no hay internet, la slide se saltea sola)
+     "cumples"   cumpleaños del mes actual (items: {date:"MM-DD", name})
+                 muestra automáticamente solo los del mes en curso
+     "foto"      foto a pantalla completa (src, title, caption)
+                 poné la imagen en la carpeta assets/ y referenciala: src:"assets/equipo.jpg"
+     "info"      título + texto libre
+   "secs" = segundos que dura esa slide (opcional, por defecto 10).
+   ================================================================= */
+const SLIDES = [
+  {
+    type:"cover",
+    hello:"Bienvenidos al equipo",
+    title:["Work ", "&", " Fun ", "'26"],
+    tag:"Donde el trabajo se hace... y se disfruta.",
+    chips:[
+      {text:"Equipo HP", style:"blue"},
+      {text:"Edición 2026", style:""},
+      {text:"#WorkAndFun", style:"orange"}
+    ],
+    secs:9
+  },
+  {
+    type:"agenda",
+    eyebrow:"Agenda de la semana",
+    title:"Lo que se viene",
+    items:[
+      {when:"Lun 09:30", what:"Kickoff y objetivos del trimestre", where:"Sala Andes"},
+      {when:"Mié 13:00", what:"Almuerzo del equipo", where:"Patio central"},
+      {when:"Jue 16:00", what:"Demo & coffee", where:"Hub creativo"},
+      {when:"Vie 17:30", what:"After: Work & Fun '26 🎉", where:"Terraza"}
+    ],
+    secs:13
+  },
+  {
+    type:"anuncios",
+    eyebrow:"Anuncios",
+    title:"Para tener en cuenta",
+    items:[
+      {icon:"🏆", title:"Reto del mes", desc:"El que cierre más tareas se lleva el trofeo (y el café gratis)."},
+      {icon:"📸", title:"Foto de equipo", desc:"Jueves 15:00 en la entrada. ¡Vení con la remera del equipo!"},
+      {icon:"💡", title:"Buzón de ideas", desc:"Escaneá el QR del pasillo y dejá tu propuesta."}
+    ],
+    secs:13
+  },
+  {
+    type:"clima",
+    secs:10
+  },
+  {
+    type:"cumples",
+    items:[
+      {date:"06-08", name:"Lucía Fernández"},
+      {date:"06-21", name:"Martín Gómez"},
+      {date:"06-29", name:"Sofía Ramírez"},
+      {date:"07-04", name:"Diego Pérez"},
+      {date:"12-12", name:"Carla Méndez"}
+    ],
+    secs:11
+  },
+  {
+    type:"countdown",
+    eyebrow:"Cuenta regresiva",
+    title:"Falta para la fiesta de fin de año",
+    target:"2026-12-19T19:00:00",
+    secs:11
+  },
+  {
+    type:"foto",
+    src:"assets/equipo-1.jpg",
+    title:"¡Gran trabajo, equipo!",
+    caption:"Reemplazá esta imagen poniendo tu foto en assets/equipo-1.jpg",
+    secs:9
+  },
+  {
+    type:"quote",
+    text:"Solos llegamos rápido; juntos llegamos lejos.",
+    by:"— Equipo Work & Fun '26",
+    secs:9
+  }
+];
+
+/* =================== Motor de la cartelera =================== */
+const slidesEl = document.getElementById('slides');
+const dotsEl   = document.getElementById('dots');
+const barEl    = document.getElementById('bar');
+const DEFAULT_SECS = 10;
+
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; }
+
+function buildCover(s){
+  const chips=(s.chips||[]).map(c=>`<span class="chip ${c.style||''}">${c.text}</span>`).join('');
+  const title=(s.title||[]).map(p=> p==="&" ? `<span class="amp">&amp;</span>` : p).join('');
+  return `<div class="slide cover">
+    <div class="hello">${s.hello||''}</div>
+    <h1>${title}</h1>
+    <div class="tag">${s.tag||''}</div>
+    <div class="chips">${chips}</div>
+  </div>`;
+}
+function buildAgenda(s){
+  const rows=(s.items||[]).map(i=>`<div class="row"><div class="when">${i.when||''}</div><div class="what">${i.what||''}</div><div class="where">${i.where||''}</div></div>`).join('');
+  return `<div class="slide">
+    <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
+    <h1>${s.title||''}</h1>
+    <div class="rows">${rows}</div>
+  </div>`;
+}
+function buildAnuncios(s){
+  const items=(s.items||[]).map(i=>`<li><div class="ic">${i.icon||'•'}</div><div><div class="bt">${i.title||''}</div><div class="bd">${i.desc||''}</div></div></li>`).join('');
+  return `<div class="slide">
+    <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
+    <h1>${s.title||''}</h1>
+    <ul class="bullets">${items}</ul>
+  </div>`;
+}
+function buildCountdown(s){
+  return `<div class="slide count" data-target="${s.target||''}">
+    <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
+    <h1>${s.title||''}</h1>
+    <div class="units">
+      <div class="u"><div class="n" data-u="d">0</div><div class="l">días</div></div>
+      <div class="u"><div class="n" data-u="h">0</div><div class="l">horas</div></div>
+      <div class="u"><div class="n" data-u="m">0</div><div class="l">min</div></div>
+      <div class="u"><div class="n" data-u="s">0</div><div class="l">seg</div></div>
+    </div>
+  </div>`;
+}
+function buildQuote(s){
+  return `<div class="slide quote">
+    <blockquote>${s.text||''}</blockquote>
+    <div class="by">${s.by||''}</div>
+  </div>`;
+}
+function buildInfo(s){
+  return `<div class="slide">
+    <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
+    <h1>${s.title||''}</h1>
+    <p class="lead">${s.body||''}</p>
+  </div>`;
+}
+function buildClima(s){
+  return `<div class="slide clima">
+    <div class="eyebrow"><span class="dot"></span>El clima ahora</div>
+    <h1>Buenos Aires</h1>
+    <div class="wxbig">
+      <div class="wxbig-ic" id="cIc">⛅</div>
+      <div class="wxbig-main">
+        <div class="wxbig-temp" id="cTemp">--°</div>
+        <div class="wxbig-cond" id="cCond">Conectando…</div>
+      </div>
+      <div class="wxbig-side">
+        <div class="it"><b id="cMax">--°</b><small>Máxima</small></div>
+        <div class="it"><b id="cMin">--°</b><small>Mínima</small></div>
+        <div class="it"><b id="cWind">-- km/h</b><small>Viento</small></div>
+        <div class="it"><b id="cHum">--%</b><small>Humedad</small></div>
+      </div>
+    </div>
+  </div>`;
+}
+function buildCumples(s){
+  const now=new Date();
+  const mm=pad(now.getMonth()+1);
+  const monthName=now.toLocaleDateString('es-AR',{month:'long'});
+  const list=(s.items||[]).filter(i=>(i.date||'').slice(0,2)===mm)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const rows=list.length
+    ? list.map(i=>`<div class="cu"><div class="cu-day">${parseInt(i.date.slice(3),10)}</div><div class="cu-name">${i.name||''}</div></div>`).join('')
+    : '<div class="cu-empty">Sin cumpleaños este mes 🎈</div>';
+  return `<div class="slide">
+    <div class="eyebrow"><span class="dot"></span>Cumpleaños del mes</div>
+    <h1>🎂 ${monthName.charAt(0).toUpperCase()+monthName.slice(1)}</h1>
+    <div class="cumples">${rows}</div>
+  </div>`;
+}
+function buildFoto(s){
+  return `<div class="slide foto" style="--img:url('${s.src||''}')">
+    <div class="foto-bg"></div>
+    <div class="foto-cap"><div class="foto-t">${s.title||''}</div><div class="foto-d">${s.caption||''}</div></div>
+  </div>`;
+}
+const BUILDERS={cover:buildCover,agenda:buildAgenda,anuncios:buildAnuncios,countdown:buildCountdown,quote:buildQuote,clima:buildClima,cumples:buildCumples,foto:buildFoto,info:buildInfo};
+
+// render
+SLIDES.forEach((s,i)=>{
+  const node=el((BUILDERS[s.type]||buildInfo)(s));
+  slidesEl.appendChild(node);
+  const dot=document.createElement('i'); if(i===0)dot.className='on'; dotsEl.appendChild(dot);
+});
+const slideNodes=[...slidesEl.querySelectorAll('.slide')];
+const dotNodes=[...dotsEl.children];
+
+let idx=0, paused=false, t0=performance.now(), raf, weatherOK=false;
+// ¿se puede mostrar esta slide? (el clima se saltea si no hay datos / no hay internet)
+function visible(i){ return !(SLIDES[i].type==='clima' && !weatherOK); }
+function show(i, dir){
+  dir = dir || 1;
+  let n=(i+SLIDES.length)%SLIDES.length, guard=0;
+  while(!visible(n) && guard++<SLIDES.length){ n=(n+dir+SLIDES.length)%SLIDES.length; }
+  slideNodes[idx].classList.remove('active');
+  dotNodes[idx].classList.remove('on');
+  idx=n;
+  slideNodes[idx].classList.add('active');
+  dotNodes[idx].classList.add('on');
+  t0=performance.now();
+}
+function next(){ show(idx+1, 1); }
+function prev(){ show(idx-1, -1); }
+
+function loop(now){
+  const dur=(SLIDES[idx].secs||DEFAULT_SECS)*1000;
+  if(!paused){
+    const p=Math.min(1,(now-t0)/dur);
+    barEl.style.width=(p*100)+'%';
+    if(p>=1) next();
+  }
+  updateCountdowns();
+  raf=requestAnimationFrame(loop);
+}
+
+// reloj
+function tick(){
+  const d=new Date();
+  document.getElementById('clock').textContent=d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('today').textContent=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+}
+function pad(n){return String(n).padStart(2,'0');}
+function updateCountdowns(){
+  slidesEl.querySelectorAll('.count[data-target]').forEach(c=>{
+    const tg=new Date(c.dataset.target).getTime(); if(isNaN(tg))return;
+    let diff=Math.max(0,tg-Date.now());
+    const d=Math.floor(diff/864e5); diff-=d*864e5;
+    const h=Math.floor(diff/36e5); diff-=h*36e5;
+    const m=Math.floor(diff/6e4); diff-=m*6e4;
+    const s=Math.floor(diff/1e3);
+    c.querySelector('[data-u=d]').textContent=d;
+    c.querySelector('[data-u=h]').textContent=pad(h);
+    c.querySelector('[data-u=m]').textContent=pad(m);
+    c.querySelector('[data-u=s]').textContent=pad(s);
+  });
+}
+
+// ============ CLIMA EN VIVO · Buenos Aires (Open-Meteo, sin API key) ============
+// Códigos WMO -> emoji + texto en español
+function wmo(c){
+  const M={
+    0:['☀️','Despejado'],1:['🌤️','Mayormente despejado'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],
+    45:['🌫️','Niebla'],48:['🌫️','Niebla con escarcha'],
+    51:['🌦️','Llovizna leve'],53:['🌦️','Llovizna'],55:['🌦️','Llovizna intensa'],
+    56:['🌧️','Llovizna helada'],57:['🌧️','Llovizna helada'],
+    61:['🌧️','Lluvia leve'],63:['🌧️','Lluvia'],65:['🌧️','Lluvia intensa'],
+    66:['🌧️','Lluvia helada'],67:['🌧️','Lluvia helada'],
+    71:['🌨️','Nieve leve'],73:['🌨️','Nieve'],75:['🌨️','Nieve intensa'],77:['🌨️','Nieve'],
+    80:['🌦️','Chaparrones'],81:['🌦️','Chaparrones'],82:['⛈️','Chaparrones fuertes'],
+    85:['🌨️','Nevadas'],86:['🌨️','Nevadas'],
+    95:['⛈️','Tormenta'],96:['⛈️','Tormenta con granizo'],99:['⛈️','Tormenta con granizo']
+  };
+  return M[c]||['🌡️','—'];
+}
+function setTxt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function refreshClimaDots(){
+  // oculta el punto de la slide de clima si no hay datos (queda salteada)
+  SLIDES.forEach((s,i)=>{ if(s.type==='clima') dotNodes[i].style.display = weatherOK ? '' : 'none'; });
+}
+async function fetchWeather(){
+  // si la slide de clima no existe, no hace falta pedir nada
+  if(!SLIDES.some(s=>s.type==='clima')) return;
+  const url="https://api.open-meteo.com/v1/forecast?latitude=-34.6131&longitude=-58.3772"
+    +"&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
+    +"&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FBuenos_Aires";
+  try{
+    const r=await fetch(url,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const cur=j.current, day=j.daily, w=wmo(cur.weather_code);
+    const t=Math.round(cur.temperature_2m);
+    // barra superior
+    setTxt('wxTemp',t+'°'); setTxt('wxIc',w[0]);
+    // slide de clima
+    setTxt('cIc',w[0]); setTxt('cTemp',t+'°'); setTxt('cCond',w[1]);
+    setTxt('cMax',Math.round(day.temperature_2m_max[0])+'°');
+    setTxt('cMin',Math.round(day.temperature_2m_min[0])+'°');
+    setTxt('cWind',Math.round(cur.wind_speed_10m)+' km/h');
+    setTxt('cHum',Math.round(cur.relative_humidity_2m)+'%');
+    weatherOK=true;
+    document.getElementById('wx').hidden=false;   // muestra el widget de la barra
+  }catch(e){
+    // sin internet en la pantalla: ocultamos el clima y la cartelera sigue igual
+    weatherOK=false;
+    document.getElementById('wx').hidden=true;
+  }
+  refreshClimaDots();
+}
+
+// controles
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') next();
+  else if(e.key==='ArrowLeft') prev();
+  else if(e.key===' '){ paused=!paused; e.preventDefault(); }
+  else if(e.key.toLowerCase()==='f'){ if(!document.fullscreenElement)document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+});
+// mostrar el cursor solo al moverlo
+let curTimer;
+document.addEventListener('mousemove',()=>{
+  document.body.classList.add('show-cursor');
+  clearTimeout(curTimer);
+  curTimer=setTimeout(()=>document.body.classList.remove('show-cursor'),2500);
+});
+
+// arranque
+slideNodes[0].classList.add('active');
+tick(); setInterval(tick,1000);
+refreshClimaDots();                          // oculta el dot del clima hasta tener datos
+fetchWeather();                              // pide el clima al iniciar...
+setInterval(fetchWeather, 15*60*1000);       // ...y lo refresca cada 15 minutos
+raf=requestAnimationFrame(loop);
+</script>
+</body>
+</html>
