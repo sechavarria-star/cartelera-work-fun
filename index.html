@@ -42,7 +42,7 @@
     padding:30px 76px 18px;
   }
   .brand-logo{height:62px;width:auto;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
-  .brandtxt{line-height:1.15;padding-left:4px;border-left:2px solid rgba(255,255,255,.16);padding-left:22px}
+  .brandtxt{line-height:1.15;padding-left:6px}
   .brandtxt .team{font-size:30px;font-weight:700;letter-spacing:.3px}
   .brandtxt .team .amp{color:var(--hp-orange)}
   .brandtxt .sub{font-size:13px;color:var(--muted);letter-spacing:3.5px;text-transform:uppercase;margin-top:6px}
@@ -123,8 +123,6 @@
   .quote .by{margin-top:30px;font-size:24px;color:var(--muted)}
 
   /* LOGO HP en cada slide (marca de agua, esquina sup. derecha) */
-  .slide-wm{position:absolute;top:8px;right:76px;z-index:4}
-  .slide-wm img{height:52px;display:block;opacity:.92;filter:drop-shadow(0 2px 8px rgba(0,0,0,.45))}
 
   /* CLIMA */
   .clima .wxbig{display:flex;align-items:center;gap:46px;margin-top:14px;flex-wrap:wrap}
@@ -137,10 +135,16 @@
   .clima .wxbig-side .it small{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px}
 
   /* CUMPLEAÑOS */
-  .cumples{display:flex;flex-wrap:wrap;gap:20px;margin-top:6px}
-  .cu{display:flex;align-items:center;gap:28px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:22px 34px;min-width:330px}
-  .cu-day{display:grid;place-items:center;width:66px;height:66px;border-radius:16px;background:var(--hp-orange);font-size:30px;font-weight:700;flex:0 0 auto}
-  .cu-name{font-size:28px;font-weight:600}
+  .cumples{margin-top:10px;overflow:hidden}
+  .cu-track{display:flex;gap:26px;width:max-content}
+  .cu-track.center{width:100%;justify-content:center}
+  .cu-track.scroll{animation:cuscroll var(--dur,30s) linear infinite}
+  @keyframes cuscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .cu{flex:0 0 auto;width:248px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:28px 22px;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .cu-photo{width:122px;height:122px;border-radius:50%;background:#0c2a66 center/cover no-repeat;border:3px solid var(--hp-orange);box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  .cu-ini{display:grid;place-items:center;font-size:44px;font-weight:700;color:#fff;background:var(--hp-blue)}
+  .cu-name{font-size:25px;font-weight:700;margin-top:18px;line-height:1.15}
+  .cu-when{font-size:18px;color:var(--hp-orange);font-weight:600;margin-top:7px}
   .cu-empty{font-size:26px;color:var(--muted);margin-top:14px}
 
   /* FOTO a pantalla completa */
@@ -192,7 +196,6 @@
   </header>
 
   <section id="slides">
-    <div class="slide-wm"><img src="assets/hp-roundel.png" alt="HP" onerror="if(this.src.indexOf('hp-roundel')>-1)this.src='assets/hp-logo.png';else this.parentNode.style.display='none'"></div>
     <!-- las slides se inyectan por JS -->
   </section>
 
@@ -363,15 +366,33 @@ function buildCumples(s){
   const now=new Date();
   const mm=pad(now.getMonth()+1);
   const monthName=now.toLocaleDateString('es-AR',{month:'long'});
+  const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
   const list=(s.items||[]).filter(i=>(i.date||'').slice(0,2)===mm)
     .sort((a,b)=>a.date.localeCompare(b.date));
-  const rows=list.length
-    ? list.map(i=>`<div class="cu"><div class="cu-day">${parseInt(i.date.slice(3),10)}</div><div class="cu-name">${i.name||''}</div></div>`).join('')
-    : '<div class="cu-empty">Sin cumpleaños este mes 🎈</div>';
+  if(!list.length){
+    return `<div class="slide">
+      <div class="eyebrow"><span class="dot"></span>Cumpleaños del mes</div>
+      <h1>🎂 ${cap(monthName)}</h1>
+      <div class="cu-empty">Sin cumpleaños este mes 🎈</div>
+    </div>`;
+  }
+  const card=i=>{
+    const day=parseInt(i.date.slice(3),10);
+    const ini=(i.name||'').trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+    const photo=i.foto
+      ? `<div class="cu-photo" style="background-image:url('${i.foto}')"></div>`
+      : `<div class="cu-photo cu-ini">${ini||'🎂'}</div>`;
+    return `<div class="cu">${photo}<div class="cu-name">${i.name||''}</div><div class="cu-when">${day} de ${monthName}</div></div>`;
+  };
+  const cards=list.map(card).join('');
+  const carousel=list.length>4;   // si hay muchos, carrusel que se desplaza solo
+  const track=carousel
+    ? `<div class="cu-track scroll" style="--dur:${Math.max(18,list.length*4)}s">${cards}${cards}</div>`
+    : `<div class="cu-track center">${cards}</div>`;
   return `<div class="slide">
     <div class="eyebrow"><span class="dot"></span>Cumpleaños del mes</div>
-    <h1>🎂 ${monthName.charAt(0).toUpperCase()+monthName.slice(1)}</h1>
-    <div class="cumples">${rows}</div>
+    <h1>🎂 ${cap(monthName)}</h1>
+    <div class="cumples">${track}</div>
   </div>`;
 }
 function buildFoto(s){
