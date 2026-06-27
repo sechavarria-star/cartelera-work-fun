@@ -28,7 +28,7 @@
 
   /* ---------- ESCENARIO 16:9 que llena cualquier pantalla ---------- */
   #stage{
-    position:fixed;inset:0;
+    position:fixed;top:0;right:0;bottom:0;left:0;
     background:radial-gradient(120% 120% at 80% -10%, #0c2a66 0%, var(--paper) 45%, var(--paper-2) 100%);
     display:grid;
     grid-template-rows:auto auto 1fr auto auto;
@@ -60,7 +60,7 @@
   /* ---------- ÁREA DE SLIDES ---------- */
   #slides{position:relative;overflow:hidden}
   .slide{
-    position:absolute;inset:0;
+    position:absolute;top:0;right:0;bottom:0;left:0;
     padding:18px 64px 8px;
     display:flex;flex-direction:column;justify-content:center;
     opacity:0;transform:scale(1.04);
@@ -145,8 +145,8 @@
 
   /* FOTO a pantalla completa */
   .foto{padding:0}
-  .foto .foto-bg{position:absolute;inset:0;background:var(--img) center/cover no-repeat,#0c2a66}
-  .foto::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(4,12,32,.92) 0%,rgba(4,12,32,.05) 50%,rgba(4,12,32,.30) 100%)}
+  .foto .foto-bg{position:absolute;top:0;right:0;bottom:0;left:0;background:var(--img) center/cover no-repeat,#0c2a66}
+  .foto::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(0deg,rgba(4,12,32,.92) 0%,rgba(4,12,32,.05) 50%,rgba(4,12,32,.30) 100%)}
   .foto .foto-cap{position:absolute;left:64px;bottom:60px;z-index:2;max-width:70%}
   .foto .foto-t{font-size:56px;font-weight:700;line-height:1.05}
   .foto .foto-d{font-size:24px;color:#d7e0f5;margin-top:10px}
