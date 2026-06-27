@@ -582,7 +582,7 @@ if(PREVIEW){
 }else{
   // modo TV: lee del back office; si no hay internet usa el contenido por defecto
   fetchData(d=>applyData(d||DEFAULT_DATA));
-  setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 3*60*1000);   // refresca cada 3 min
+  setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 20*1000);   // consulta cambios cada 20 s
 }
 </script>
 </body>
