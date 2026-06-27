@@ -38,15 +38,14 @@
 
   /* ---------- BARRA SUPERIOR ---------- */
   .topbar{
-    display:flex;align-items:center;gap:22px;
-    padding:26px 56px 10px;
+    display:flex;align-items:center;gap:26px;
+    padding:30px 76px 18px;
   }
-  .logo-badge{background:#fff;border-radius:14px;padding:10px 12px;display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.35)}
-  .logo-badge img{height:46px;display:block}
-  .brandtxt{line-height:1.1}
+  .brand-logo{height:62px;width:auto;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+  .brandtxt{line-height:1.15;padding-left:4px;border-left:2px solid rgba(255,255,255,.16);padding-left:22px}
   .brandtxt .team{font-size:30px;font-weight:700;letter-spacing:.3px}
   .brandtxt .team .amp{color:var(--hp-orange)}
-  .brandtxt .sub{font-size:14px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:4px}
+  .brandtxt .sub{font-size:13px;color:var(--muted);letter-spacing:3.5px;text-transform:uppercase;margin-top:6px}
   .right{margin-left:auto;display:flex;align-items:center;gap:36px}
   .clockbox{text-align:right}
   .wx{display:flex;align-items:center;gap:14px}
@@ -61,7 +60,7 @@
   #slides{position:relative;overflow:hidden}
   .slide{
     position:absolute;top:0;right:0;bottom:0;left:0;
-    padding:18px 64px 8px;
+    padding:30px 80px 18px;
     display:flex;flex-direction:column;justify-content:center;
     opacity:0;transform:scale(1.04);
     transition:opacity .7s ease, transform .9s ease;
@@ -70,12 +69,12 @@
   .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
 
   .eyebrow{
-    display:inline-flex;align-items:center;gap:12px;
-    font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-    color:#fff;margin-bottom:18px;
+    display:inline-flex;align-items:center;gap:14px;
+    font-size:17px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;
+    color:var(--hp-storm);margin-bottom:26px;
   }
-  .eyebrow .dot{width:14px;height:14px;border-radius:50%;background:var(--hp-orange);box-shadow:0 0 0 6px rgba(255,80,80,.18)}
-  .slide h1{font-size:64px;line-height:1.05;letter-spacing:-1px;margin-bottom:14px}
+  .eyebrow .dot{width:12px;height:12px;border-radius:50%;background:var(--hp-orange);box-shadow:0 0 0 5px rgba(255,80,80,.16)}
+  .slide h1{font-size:62px;line-height:1.08;letter-spacing:-1px;margin-bottom:34px}
   .slide .lead{font-size:26px;color:var(--muted);max-width:60ch}
 
   /* COVER */
@@ -90,24 +89,25 @@
   .chip.orange{background:var(--hp-orange)}
 
   /* AGENDA / LISTA */
-  .rows{display:flex;flex-direction:column;gap:16px;margin-top:8px}
+  .rows{display:flex;flex-direction:column;gap:18px;margin-top:6px}
   .row{
-    display:flex;align-items:center;gap:26px;
-    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
-    border-radius:18px;padding:20px 28px;
+    display:flex;align-items:center;gap:34px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
+    border-left:4px solid var(--hp-blue);
+    border-radius:16px;padding:24px 34px;
   }
-  .row .when{font-size:30px;font-weight:700;color:var(--hp-orange);min-width:170px;font-variant-numeric:tabular-nums}
+  .row .when{font-size:29px;font-weight:700;color:var(--hp-orange);min-width:185px;font-variant-numeric:tabular-nums}
   .row .what{font-size:28px;font-weight:600}
-  .row .where{margin-left:auto;font-size:20px;color:var(--muted)}
+  .row .where{margin-left:auto;font-size:20px;color:var(--muted);padding-left:24px}
 
   /* ANUNCIOS / BULLETS */
-  .bullets{display:flex;flex-direction:column;gap:22px;margin-top:10px}
-  .bullets li{display:flex;align-items:flex-start;gap:22px;list-style:none}
-  .bullets .ic{flex:0 0 auto;width:58px;height:58px;border-radius:16px;display:grid;place-items:center;font-size:30px;background:var(--hp-blue)}
+  .bullets{display:flex;flex-direction:column;gap:30px;margin-top:6px}
+  .bullets li{display:flex;align-items:center;gap:34px;list-style:none}
+  .bullets .ic{flex:0 0 auto;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:32px;background:var(--hp-blue)}
   .bullets li:nth-child(3n+2) .ic{background:var(--hp-orange)}
   .bullets li:nth-child(3n+3) .ic{background:var(--hp-storm)}
   .bullets .bt{font-size:30px;font-weight:700}
-  .bullets .bd{font-size:22px;color:var(--muted);margin-top:4px}
+  .bullets .bd{font-size:22px;color:var(--muted);margin-top:7px;line-height:1.45}
 
   /* COUNTDOWN */
   .count{align-items:center;text-align:center}
@@ -123,8 +123,8 @@
   .quote .by{margin-top:30px;font-size:24px;color:var(--muted)}
 
   /* LOGO HP en cada slide (marca de agua, esquina sup. derecha) */
-  .slide-wm{position:absolute;top:18px;right:60px;z-index:4;background:#fff;border-radius:12px;padding:8px 11px;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
-  .slide-wm img{height:34px;display:block}
+  .slide-wm{position:absolute;top:8px;right:76px;z-index:4}
+  .slide-wm img{height:52px;display:block;opacity:.92;filter:drop-shadow(0 2px 8px rgba(0,0,0,.45))}
 
   /* CLIMA */
   .clima .wxbig{display:flex;align-items:center;gap:46px;margin-top:14px;flex-wrap:wrap}
@@ -137,9 +137,9 @@
   .clima .wxbig-side .it small{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px}
 
   /* CUMPLEAÑOS */
-  .cumples{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px}
-  .cu{display:flex;align-items:center;gap:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:18px 26px;min-width:300px}
-  .cu-day{display:grid;place-items:center;width:64px;height:64px;border-radius:16px;background:var(--hp-orange);font-size:30px;font-weight:700;flex:0 0 auto}
+  .cumples{display:flex;flex-wrap:wrap;gap:20px;margin-top:6px}
+  .cu{display:flex;align-items:center;gap:28px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:22px 34px;min-width:330px}
+  .cu-day{display:grid;place-items:center;width:66px;height:66px;border-radius:16px;background:var(--hp-orange);font-size:30px;font-weight:700;flex:0 0 auto}
   .cu-name{font-size:28px;font-weight:600}
   .cu-empty{font-size:26px;color:var(--muted);margin-top:14px}
 
@@ -171,7 +171,7 @@
   <div class="stripe"></div>
 
   <header class="topbar">
-    <div class="logo-badge"><img src="assets/hp-logo.png" alt="HP" onerror="this.style.display='none'"></div>
+    <img class="brand-logo" src="assets/hp-roundel.png" alt="HP" onerror="if(this.src.indexOf('hp-roundel')>-1)this.src='assets/hp-logo.png';else this.style.display='none'">
     <div class="brandtxt">
       <div class="team">Work <span class="amp">&amp;</span> Fun '26</div>
       <div class="sub">HP Argentina</div>
@@ -192,7 +192,7 @@
   </header>
 
   <section id="slides">
-    <div class="slide-wm"><img src="assets/hp-logo.png" alt="HP" onerror="this.parentNode.style.display='none'"></div>
+    <div class="slide-wm"><img src="assets/hp-roundel.png" alt="HP" onerror="if(this.src.indexOf('hp-roundel')>-1)this.src='assets/hp-logo.png';else this.parentNode.style.display='none'"></div>
     <!-- las slides se inyectan por JS -->
   </section>
 
