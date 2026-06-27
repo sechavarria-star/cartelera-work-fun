@@ -225,78 +225,61 @@
      "info"      título + texto libre
    "secs" = segundos que dura esa slide (opcional, por defecto 10).
    ================================================================= */
-const SLIDES = [
-  {
-    type:"cover",
-    hello:"Bienvenidos al equipo",
-    title:["Work ", "&", " Fun ", "'26"],
-    tag:"Donde el trabajo se hace... y se disfruta.",
-    chips:[
-      {text:"Equipo HP", style:"blue"},
-      {text:"Edición 2026", style:""},
-      {text:"#WorkAndFun", style:"orange"}
-    ],
-    secs:9
-  },
-  {
-    type:"agenda",
-    eyebrow:"Agenda de la semana",
-    title:"Lo que se viene",
-    items:[
-      {when:"Lun 09:30", what:"Kickoff y objetivos del trimestre", where:"Sala Andes"},
-      {when:"Mié 13:00", what:"Almuerzo del equipo", where:"Patio central"},
-      {when:"Jue 16:00", what:"Demo & coffee", where:"Hub creativo"},
-      {when:"Vie 17:30", what:"After: Work & Fun '26 🎉", where:"Terraza"}
-    ],
-    secs:13
-  },
-  {
-    type:"anuncios",
-    eyebrow:"Anuncios",
-    title:"Para tener en cuenta",
-    items:[
-      {icon:"🏆", title:"Reto del mes", desc:"El que cierre más tareas se lleva el trofeo (y el café gratis)."},
-      {icon:"📸", title:"Foto de equipo", desc:"Jueves 15:00 en la entrada. ¡Vení con la remera del equipo!"},
-      {icon:"💡", title:"Buzón de ideas", desc:"Escaneá el QR del pasillo y dejá tu propuesta."}
-    ],
-    secs:13
-  },
-  {
-    type:"clima",
-    secs:10
-  },
-  {
-    type:"cumples",
-    items:[
-      {date:"06-08", name:"Lucía Fernández"},
-      {date:"06-21", name:"Martín Gómez"},
-      {date:"06-29", name:"Sofía Ramírez"},
-      {date:"07-04", name:"Diego Pérez"},
-      {date:"12-12", name:"Carla Méndez"}
-    ],
-    secs:11
-  },
-  {
-    type:"countdown",
-    eyebrow:"Cuenta regresiva",
-    title:"Falta para la fiesta de fin de año",
-    target:"2026-12-19T19:00:00",
-    secs:11
-  },
-  {
-    type:"foto",
-    src:"assets/equipo-1.jpg",
-    title:"¡Gran trabajo, equipo!",
-    caption:"Reemplazá esta imagen poniendo tu foto en assets/equipo-1.jpg",
-    secs:9
-  },
-  {
-    type:"quote",
-    text:"Solos llegamos rápido; juntos llegamos lejos.",
-    by:"— Equipo Work & Fun '26",
-    secs:9
+// Contenido por defecto: se usa si la cartelera no puede leer el back office (p. ej. sin internet).
+const DEFAULT_DATA = {
+  novedades:[
+    {when:"Lun 09:30", what:"Kickoff y objetivos del trimestre", where:"Sala Andes"},
+    {when:"Mié 13:00", what:"Almuerzo del equipo", where:"Patio central"},
+    {when:"Jue 16:00", what:"Demo & coffee", where:"Hub creativo"},
+    {when:"Vie 17:30", what:"After: Work & Fun '26", where:"Terraza"}
+  ],
+  cumples:[
+    {date:"06-08", name:"Lucía Fernández"},
+    {date:"06-21", name:"Martín Gómez"},
+    {date:"06-29", name:"Sofía Ramírez"},
+    {date:"07-04", name:"Diego Pérez"}
+  ],
+  fotos:[],
+  config:{
+    portada_hola:"Bienvenidos al equipo",
+    portada_tag:"Donde el trabajo se hace... y se disfruta.",
+    clima_activo:"si", clima_ciudad:"Buenos Aires", clima_lat:"-34.6131", clima_lon:"-58.3772",
+    evento_titulo:"Falta para la fiesta de fin de año", evento_fecha:"2026-12-19T19:00:00",
+    frase_texto:"Solos llegamos rápido; juntos llegamos lejos.", frase_autor:"— Equipo Work & Fun '26"
   }
-];
+};
+
+// Arma la lista de slides a partir del contenido que viene del back office.
+function makeSlides(data){
+  data = data || DEFAULT_DATA;
+  const cfg = data.config || {};
+  const mm = pad(new Date().getMonth()+1);
+  const slides = [];
+
+  slides.push({ type:"cover", hello:cfg.portada_hola||"Bienvenidos al equipo",
+    title:["Work ","&"," Fun ","'26"], tag:cfg.portada_tag||"",
+    chips:[{text:"Equipo HP",style:"blue"},{text:"Edición 2026",style:""},{text:"#WorkAndFun",style:"orange"}], secs:9 });
+
+  if((data.novedades||[]).length)
+    slides.push({ type:"agenda", eyebrow:"Novedades Work & Fun", title:"Agenda del mes", items:data.novedades, secs:13 });
+
+  if((data.cumples||[]).some(c=>(c.date||'').slice(0,2)===mm))
+    slides.push({ type:"cumples", items:data.cumples, secs:11 });
+
+  (data.fotos||[]).filter(f=>f.src).forEach(f=>
+    slides.push({ type:"foto", src:f.src, title:f.title||"", caption:f.caption||"", secs:9 }));
+
+  if((cfg.clima_activo||"si")!=="no")
+    slides.push({ type:"clima", ciudad:cfg.clima_ciudad||"Buenos Aires", secs:10 });
+
+  if(cfg.evento_fecha)
+    slides.push({ type:"countdown", eyebrow:"Cuenta regresiva", title:cfg.evento_titulo||"", target:cfg.evento_fecha, secs:11 });
+
+  if(cfg.frase_texto)
+    slides.push({ type:"quote", text:cfg.frase_texto, by:cfg.frase_autor||"", secs:9 });
+
+  return slides;
+}
 
 /* =================== Motor de la cartelera =================== */
 const slidesEl = document.getElementById('slides');
@@ -360,7 +343,7 @@ function buildInfo(s){
 function buildClima(s){
   return `<div class="slide clima">
     <div class="eyebrow"><span class="dot"></span>El clima ahora</div>
-    <h1>Buenos Aires</h1>
+    <h1>${s.ciudad||'Buenos Aires'}</h1>
     <div class="wxbig">
       <div class="wxbig-ic" id="cIc">⛅</div>
       <div class="wxbig-main">
@@ -399,16 +382,24 @@ function buildFoto(s){
 }
 const BUILDERS={cover:buildCover,agenda:buildAgenda,anuncios:buildAnuncios,countdown:buildCountdown,quote:buildQuote,clima:buildClima,cumples:buildCumples,foto:buildFoto,info:buildInfo};
 
-// render
-SLIDES.forEach((s,i)=>{
-  const node=el((BUILDERS[s.type]||buildInfo)(s));
-  slidesEl.appendChild(node);
-  const dot=document.createElement('i'); if(i===0)dot.className='on'; dotsEl.appendChild(dot);
-});
-const slideNodes=[...slidesEl.querySelectorAll('.slide')];
-const dotNodes=[...dotsEl.children];
+// estado del motor
+let SLIDES=[], slideNodes=[], dotNodes=[], idx=0, paused=false, t0=performance.now(), raf, weatherOK=false, started=false, lastDataStr='';
+let WX={lat:-34.6131, lon:-58.3772};
 
-let idx=0, paused=false, t0=performance.now(), raf, weatherOK=false;
+// (re)dibuja todas las slides a partir de SLIDES
+function render(){
+  slidesEl.querySelectorAll('.slide').forEach(n=>n.remove());
+  dotsEl.innerHTML='';
+  SLIDES.forEach(s=>{
+    slidesEl.appendChild(el((BUILDERS[s.type]||buildInfo)(s)));
+    dotsEl.appendChild(document.createElement('i'));
+  });
+  slideNodes=[...slidesEl.querySelectorAll('.slide')];
+  dotNodes=[...dotsEl.children];
+  idx=0; t0=performance.now();
+  if(slideNodes.length){ slideNodes[0].classList.add('active'); dotNodes[0].classList.add('on'); }
+  refreshClimaDots();
+}
 // ¿se puede mostrar esta slide? (el clima se saltea si no hay datos / no hay internet)
 function visible(i){ return !(SLIDES[i].type==='clima' && !weatherOK); }
 function show(i, dir){
@@ -483,7 +474,7 @@ function refreshClimaDots(){
 async function fetchWeather(){
   // si la slide de clima no existe, no hace falta pedir nada
   if(!SLIDES.some(s=>s.type==='clima')) return;
-  const url="https://api.open-meteo.com/v1/forecast?latitude=-34.6131&longitude=-58.3772"
+  const url="https://api.open-meteo.com/v1/forecast?latitude="+WX.lat+"&longitude="+WX.lon
     +"&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
     +"&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FBuenos_Aires";
   try{
@@ -525,13 +516,53 @@ document.addEventListener('mousemove',()=>{
   curTimer=setTimeout(()=>document.body.classList.remove('show-cursor'),2500);
 });
 
-// arranque
-slideNodes[0].classList.add('active');
-tick(); setInterval(tick,1000);
-refreshClimaDots();                          // oculta el dot del clima hasta tener datos
-fetchWeather();                              // pide el clima al iniciar...
-setInterval(fetchWeather, 15*60*1000);       // ...y lo refresca cada 15 minutos
-raf=requestAnimationFrame(loop);
+// ============ CONEXIÓN CON EL BACK OFFICE ============
+const DATA_URL='https://script.google.com/macros/s/AKfycbxAt5gQYspry28ntaEweGr0Wp4myCLObjB9N81Wc4c3OjGEujtUqreuxn57adss2UNPZg/exec';
+const PREVIEW=new URLSearchParams(location.search).get('preview')==='1';
+
+function applyData(data){
+  const str=JSON.stringify(data);
+  if(str===lastDataStr) return;            // sin cambios -> no re-dibuja
+  lastDataStr=str;
+  const cfg=(data&&data.config)||{};
+  WX.lat=parseFloat(cfg.clima_lat)|| -34.6131;
+  WX.lon=parseFloat(cfg.clima_lon)|| -58.3772;
+  const cityEl=document.querySelector('.wx-city'); if(cityEl) cityEl.textContent=cfg.clima_ciudad||'Buenos Aires';
+  SLIDES=makeSlides(data);
+  render();
+  if(!started){ startEngine(); started=true; }
+  fetchWeather();
+}
+function startEngine(){
+  tick(); setInterval(tick,1000);
+  setInterval(fetchWeather, 15*60*1000);
+  raf=requestAnimationFrame(loop);
+}
+// JSONP: lee el contenido del back office sin problemas de CORS desde GitHub Pages
+function fetchData(cb){
+  const fn='__cb'+Math.random().toString(36).slice(2);
+  const s=document.createElement('script');
+  let done=false;
+  const finish=d=>{ if(done)return; done=true; try{delete window[fn];}catch(e){} s.remove(); cb(d); };
+  window[fn]=finish;
+  s.onerror=()=>finish(null);
+  s.src=DATA_URL+'?action=data&callback='+fn+'&t='+Date.now();
+  document.body.appendChild(s);
+  setTimeout(()=>finish(null), 8000);      // si no responde (offline / sin permisos) -> usa default
+}
+
+if(PREVIEW){
+  // modo vista previa: el back office manda el contenido por postMessage al editar
+  applyData(DEFAULT_DATA);
+  window.addEventListener('message',ev=>{
+    const m=ev.data;
+    if(m && m.type==='cartelera-data' && m.data){ lastDataStr=''; applyData(m.data); }
+  });
+}else{
+  // modo TV: lee del back office; si no hay internet usa el contenido por defecto
+  fetchData(d=>applyData(d||DEFAULT_DATA));
+  setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 3*60*1000);   // refresca cada 3 min
+}
 </script>
 </body>
 </html>
