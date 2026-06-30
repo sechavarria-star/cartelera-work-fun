@@ -259,26 +259,30 @@ function makeSlides(data){
   const mm = pad(new Date().getMonth()+1);
   const slides = [];
 
-  slides.push({ type:"cover", hello:cfg.portada_hola||"Bienvenidos al equipo",
-    title:["Work ","&"," Fun ","'26"], tag:cfg.portada_tag||"",
-    chips:[{text:"Equipo HP",style:"blue"},{text:"Edición 2026",style:""},{text:"#WorkAndFun",style:"orange"}], secs:9 });
+  const on = k => (cfg[k]||"si")!=="no";   // cada sección se publica salvo que esté en "no"
 
-  if((data.novedades||[]).length)
+  if(on("pub_portada"))
+    slides.push({ type:"cover", hello:cfg.portada_hola||"Bienvenidos al equipo",
+      title:["Work ","&"," Fun ","'26"], tag:cfg.portada_tag||"",
+      chips:[{text:"Equipo HP",style:"blue"},{text:"Edición 2026",style:""},{text:"#WorkAndFun",style:"orange"}], secs:9 });
+
+  if(on("pub_novedades") && (data.novedades||[]).length)
     slides.push({ type:"agenda", eyebrow:"Novedades Work & Fun", title:"Agenda del mes", items:data.novedades, secs:13 });
 
-  if((data.cumples||[]).some(c=>(c.date||'').slice(0,2)===mm))
+  if(on("pub_cumples") && (data.cumples||[]).some(c=>(c.date||'').slice(0,2)===mm))
     slides.push({ type:"cumples", items:data.cumples, secs:11 });
 
-  (data.fotos||[]).filter(f=>f.src).forEach(f=>
-    slides.push({ type:"foto", src:f.src, title:f.title||"", caption:f.caption||"", secs:9 }));
+  if(on("pub_fotos"))
+    (data.fotos||[]).filter(f=>f.src).forEach(f=>
+      slides.push({ type:"foto", src:f.src, title:f.title||"", caption:f.caption||"", secs:9 }));
 
-  if((cfg.clima_activo||"si")!=="no")
+  if(on("clima_activo"))
     slides.push({ type:"clima", ciudad:cfg.clima_ciudad||"Buenos Aires", secs:10 });
 
-  if(cfg.evento_fecha)
+  if(on("pub_countdown") && cfg.evento_fecha)
     slides.push({ type:"countdown", eyebrow:"Cuenta regresiva", title:cfg.evento_titulo||"", target:cfg.evento_fecha, secs:11 });
 
-  if(cfg.frase_texto)
+  if(on("pub_frase") && cfg.frase_texto)
     slides.push({ type:"quote", text:cfg.frase_texto, by:cfg.frase_autor||"", secs:9 });
 
   return slides;
@@ -585,7 +589,7 @@ if(PREVIEW){
   setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 20*1000);   // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  const VERSION='8';
+  const VERSION='9';
   function checkVersion(){
     fetch('version.txt?t='+Date.now(),{cache:'no-store'})
       .then(r=>r.ok?r.text():null)
