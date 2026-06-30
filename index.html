@@ -96,7 +96,9 @@
     border-left:4px solid var(--hp-blue);
     border-radius:16px;padding:24px 34px;
   }
-  .row .when{font-size:29px;font-weight:700;color:var(--hp-orange);min-width:185px;font-variant-numeric:tabular-nums}
+  .row .when{min-width:200px;font-variant-numeric:tabular-nums}
+  .row .rday{font-size:28px;font-weight:700;color:var(--hp-orange);line-height:1.1}
+  .row .rhora{font-size:18px;color:var(--muted);margin-top:3px}
   .row .what{font-size:28px;font-weight:600}
   .row .where{margin-left:auto;font-size:20px;color:var(--muted);padding-left:24px}
 
@@ -231,10 +233,10 @@
 // Contenido por defecto: se usa si la cartelera no puede leer el back office (p. ej. sin internet).
 const DEFAULT_DATA = {
   novedades:[
-    {when:"Lun 09:30", what:"Kickoff y objetivos del trimestre", where:"Sala Andes"},
-    {when:"Mié 13:00", what:"Almuerzo del equipo", where:"Patio central"},
-    {when:"Jue 16:00", what:"Demo & coffee", where:"Hub creativo"},
-    {when:"Vie 17:30", what:"After: Work & Fun '26", where:"Terraza"}
+    {dia:"Lunes", when:"09:30", what:"Kickoff y objetivos del trimestre", where:"Sala Andes"},
+    {dia:"Miércoles", when:"13:00", what:"Almuerzo del equipo", where:"Patio central"},
+    {dia:"Jueves", when:"16:00", what:"Demo & coffee", where:"Hub creativo"},
+    {dia:"Viernes", when:"17:30", what:"After: Work & Fun '26", where:"Terraza"}
   ],
   cumples:[
     {date:"06-08", name:"Lucía Fernández"},
@@ -307,7 +309,12 @@ function buildCover(s){
   </div>`;
 }
 function buildAgenda(s){
-  const rows=(s.items||[]).map(i=>`<div class="row"><div class="when">${i.when||''}</div><div class="what">${i.what||''}</div><div class="where">${i.where||''}</div></div>`).join('');
+  const rows=(s.items||[]).map(i=>{
+    const dia=i.dia||'', when=i.when||'';
+    const left = (dia&&when) ? `<div class="rday">${dia}</div><div class="rhora">${when}</div>`
+                            : `<div class="rday">${dia||when}</div>`;
+    return `<div class="row"><div class="when">${left}</div><div class="what">${i.what||''}</div><div class="where">${i.where||''}</div></div>`;
+  }).join('');
   return `<div class="slide">
     <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
     <h1>${s.title||''}</h1>
@@ -386,7 +393,8 @@ function buildCumples(s){
     const photo=i.foto
       ? `<div class="cu-photo" style="background-image:url('${i.foto}')"></div>`
       : `<div class="cu-photo cu-ini">${ini||'🎂'}</div>`;
-    return `<div class="cu">${photo}<div class="cu-name">${i.name||''}</div><div class="cu-when">${day} de ${monthName}</div></div>`;
+    const fecha = `${day} de ${monthName}` + (i.dia ? ` · ${i.dia}` : '');
+    return `<div class="cu">${photo}<div class="cu-name">${i.name||''}</div><div class="cu-when">${fecha}</div></div>`;
   };
   const cards=list.map(card).join('');
   const carousel=list.length>4;   // si hay muchos, carrusel que se desplaza solo
@@ -589,7 +597,7 @@ if(PREVIEW){
   setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 20*1000);   // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  const VERSION='9';
+  const VERSION='10';
   function checkVersion(){
     fetch('version.txt?t='+Date.now(),{cache:'no-store'})
       .then(r=>r.ok?r.text():null)
