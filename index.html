@@ -5,169 +5,157 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cartelera · Work &amp; Fun '26</title>
 <style>
-  :root{
-    --hp-blue:#024AD8;
-    --hp-blue-dark:#0233a0;
-    --hp-orange:#FF5050;
-    --hp-storm:#568393;
-    --ink:#0b1220;
-    --paper:#0a1b3f;            /* fondo oscuro de pantalla */
-    --paper-2:#06122c;
-    --white:#ffffff;
-    --muted:#aab8d6;
-    --font:"HP Simplified","Helvetica Neue",Arial,Helvetica,sans-serif;
-  }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;width:100%;overflow:hidden;background:#000}
+  html,body{height:100%;width:100%;overflow:hidden;background:#06122c}
   body{
-    font-family:var(--font);
-    color:var(--white);
+    font-family:"HP Simplified","Helvetica Neue",Arial,Helvetica,sans-serif;
+    color:#ffffff;
     -webkit-font-smoothing:antialiased;
-    cursor:none;                 /* oculta el mouse en modo pantalla */
+    cursor:none;
   }
 
-  /* ---------- ESCENARIO 16:9 que llena cualquier pantalla ---------- */
+  /* ESCENARIO que llena la pantalla (flex, sin grid ni variables CSS: compatible con TVs viejas) */
   #stage{
     position:fixed;top:0;right:0;bottom:0;left:0;
-    background:radial-gradient(120% 120% at 80% -10%, #0c2a66 0%, var(--paper) 45%, var(--paper-2) 100%);
-    display:grid;
-    grid-template-rows:auto auto 1fr auto auto;
+    background:#0a1b3f;
+    background:radial-gradient(120% 120% at 80% -10%, #0c2a66 0%, #0a1b3f 45%, #06122c 100%);
+    display:-webkit-box;display:-webkit-flex;display:flex;
+    -webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;
   }
-  /* franja de marca HP arriba */
-  .stripe{height:8px;flex:0 0 auto;background:linear-gradient(90deg,var(--hp-blue) 0 33%,var(--hp-storm) 33% 66%,var(--hp-orange) 66% 100%)}
+  .stripe{height:8px;-webkit-flex:0 0 auto;flex:0 0 auto;background:linear-gradient(90deg,#024AD8 0%,#024AD8 33%,#568393 33%,#568393 66%,#FF5050 66%,#FF5050 100%)}
 
-  /* ---------- BARRA SUPERIOR ---------- */
+  /* BARRA SUPERIOR */
   .topbar{
-    display:flex;align-items:center;gap:42px;
+    display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;
     padding:30px 76px 18px;
   }
-  .brand-logo{height:62px;width:auto;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
-  .brandtxt{line-height:1.15}
+  .brand-logo{height:62px;width:auto;display:block;-webkit-filter:drop-shadow(0 2px 8px rgba(0,0,0,.35));filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+  .brandtxt{line-height:1.15;margin-left:42px}
   .brandtxt .team{font-size:30px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
-  .brandtxt .team .amp{color:var(--hp-orange)}
-  .brandtxt .sub{font-size:13px;color:var(--muted);letter-spacing:3.5px;text-transform:uppercase;margin-top:6px}
-  .right{margin-left:auto;display:flex;align-items:center;gap:64px}
-  .clockbox{text-align:right;white-space:nowrap}
-  .wx{display:flex;align-items:center;gap:16px;white-space:nowrap}
+  .brandtxt .team .amp{color:#FF5050}
+  .brandtxt .sub{font-size:13px;color:#aab8d6;letter-spacing:3.5px;text-transform:uppercase;margin-top:6px}
+  .right{margin-left:auto;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center}
+  .clockbox{text-align:right;white-space:nowrap;margin-left:64px}
+  .wx{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;white-space:nowrap}
   .wx-ic{font-size:46px;line-height:1}
-  .wx-meta{line-height:1.1}
-  .wx-temp{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
-  .wx-city{font-size:13px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
-  .clockbox .time{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-  .clockbox .date{font-size:15px;color:var(--muted);text-transform:capitalize;margin-top:4px}
+  .wx-meta{line-height:1.1;margin-left:16px}
+  .wx-temp{font-size:34px;font-weight:700}
+  .wx-city{font-size:13px;color:#aab8d6;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+  .clockbox .time{font-size:40px;font-weight:700;line-height:1}
+  .clockbox .date{font-size:15px;color:#aab8d6;text-transform:capitalize;margin-top:4px}
 
-  /* ---------- ÁREA DE SLIDES ---------- */
-  #slides{position:relative;overflow:hidden}
+  /* ÁREA DE SLIDES */
+  #slides{position:relative;overflow:hidden;-webkit-box-flex:1;-webkit-flex:1 1 auto;flex:1 1 auto;min-height:0}
   .slide{
     position:absolute;top:0;right:0;bottom:0;left:0;
     padding:30px 80px 18px;
-    display:flex;flex-direction:column;justify-content:center;
-    opacity:0;transform:scale(1.04);
-    transition:opacity .7s ease, transform .9s ease;
+    display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-webkit-flex-direction:column;flex-direction:column;-webkit-justify-content:center;justify-content:center;
+    opacity:0;
+    -webkit-transition:opacity .7s ease;transition:opacity .7s ease;
     pointer-events:none;
   }
-  .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+  .slide.active{opacity:1;pointer-events:auto}
 
   .eyebrow{
-    display:inline-flex;align-items:center;gap:22px;
+    display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;
     font-size:17px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;
-    color:var(--hp-storm);margin-bottom:26px;
+    color:#568393;margin-bottom:26px;
   }
-  .eyebrow .dot{flex:0 0 auto;width:12px;height:12px;border-radius:50%;background:var(--hp-orange);box-shadow:0 0 0 5px rgba(255,80,80,.16)}
+  .eyebrow .dot{-webkit-flex:0 0 auto;flex:0 0 auto;width:12px;height:12px;border-radius:50%;background:#FF5050;margin-right:22px;box-shadow:0 0 0 5px rgba(255,80,80,.16)}
   .slide h1{font-size:62px;line-height:1.08;letter-spacing:-1px;margin-bottom:34px}
-  .slide .lead{font-size:26px;color:var(--muted);max-width:60ch}
+  .slide .lead{font-size:26px;color:#aab8d6;max-width:60ch}
 
   /* COVER */
-  .cover{align-items:center;text-align:center}
-  .cover .hello{font-size:24px;letter-spacing:6px;text-transform:uppercase;color:var(--hp-storm);font-weight:700;margin-bottom:18px}
+  .cover{-webkit-align-items:center;align-items:center;text-align:center}
+  .cover .hello{font-size:24px;letter-spacing:6px;text-transform:uppercase;color:#568393;font-weight:700;margin-bottom:18px}
   .cover h1{font-size:104px;line-height:1}
-  .cover h1 .amp{color:var(--hp-orange)}
-  .cover .tag{font-size:30px;color:var(--muted);margin-top:18px}
-  .cover .chips{margin-top:38px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-  .chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:12px 24px;font-size:20px;font-weight:600}
-  .chip.blue{background:var(--hp-blue)}
-  .chip.orange{background:var(--hp-orange)}
+  .cover h1 .amp{color:#FF5050}
+  .cover .tag{font-size:30px;color:#aab8d6;margin-top:18px}
+  .cover .chips{margin-top:38px;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-justify-content:center;justify-content:center}
+  .chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:12px 24px;font-size:20px;font-weight:600;margin:7px}
+  .chip.blue{background:#024AD8}
+  .chip.orange{background:#FF5050}
 
   /* AGENDA / LISTA */
-  .rows{display:flex;flex-direction:column;gap:18px;margin-top:6px}
+  .rows{margin-top:6px}
   .row{
-    display:flex;align-items:center;gap:34px;
+    display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;
     background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
-    border-left:4px solid var(--hp-blue);
-    border-radius:16px;padding:24px 34px;
+    border-left:4px solid #024AD8;
+    border-radius:16px;padding:24px 34px;margin-bottom:18px;
   }
-  .row .when{min-width:200px;font-variant-numeric:tabular-nums}
-  .row .rday{font-size:28px;font-weight:700;color:var(--hp-orange);line-height:1.1}
-  .row .rhora{font-size:18px;color:var(--muted);margin-top:3px}
-  .row .what{font-size:28px;font-weight:600}
-  .row .where{margin-left:auto;font-size:20px;color:var(--muted);padding-left:24px}
+  .rows .row:last-child{margin-bottom:0}
+  .row .when{min-width:200px;margin-right:34px}
+  .row .rday{font-size:28px;font-weight:700;color:#FF5050;line-height:1.1}
+  .row .rhora{font-size:18px;color:#aab8d6;margin-top:3px}
+  .row .what{font-size:28px;font-weight:600;margin-right:34px}
+  .row .where{margin-left:auto;font-size:20px;color:#aab8d6;padding-left:24px}
 
   /* ANUNCIOS / BULLETS */
-  .bullets{display:flex;flex-direction:column;gap:30px;margin-top:6px}
-  .bullets li{display:flex;align-items:center;gap:34px;list-style:none}
-  .bullets .ic{flex:0 0 auto;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:32px;background:var(--hp-blue)}
-  .bullets li:nth-child(3n+2) .ic{background:var(--hp-orange)}
-  .bullets li:nth-child(3n+3) .ic{background:var(--hp-storm)}
+  .bullets{margin-top:6px}
+  .bullets li{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;list-style:none;margin-bottom:30px}
+  .bullets li:last-child{margin-bottom:0}
+  .bullets .ic{-webkit-flex:0 0 auto;flex:0 0 auto;width:64px;height:64px;border-radius:16px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-size:32px;background:#024AD8;margin-right:34px}
+  .bullets li:nth-child(3n+2) .ic{background:#FF5050}
+  .bullets li:nth-child(3n+3) .ic{background:#568393}
   .bullets .bt{font-size:30px;font-weight:700}
-  .bullets .bd{font-size:22px;color:var(--muted);margin-top:7px;line-height:1.45}
+  .bullets .bd{font-size:22px;color:#aab8d6;margin-top:7px;line-height:1.45}
 
   /* COUNTDOWN */
-  .count{align-items:center;text-align:center}
-  .count .units{display:flex;gap:30px;margin-top:26px}
-  .count .u{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:26px 34px;min-width:170px}
-  .count .u .n{font-size:88px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
-  .count .u .l{font-size:18px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:10px}
+  .count{-webkit-align-items:center;align-items:center;text-align:center}
+  .count .units{display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;margin-top:26px}
+  .count .u{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:26px 34px;min-width:170px;margin:0 15px}
+  .count .u .n{font-size:88px;font-weight:700;line-height:1}
+  .count .u .l{font-size:18px;letter-spacing:3px;text-transform:uppercase;color:#aab8d6;margin-top:10px}
 
   /* QUOTE */
-  .quote{align-items:center;text-align:center}
+  .quote{-webkit-align-items:center;align-items:center;text-align:center}
   .quote blockquote{font-size:54px;line-height:1.18;font-weight:700;max-width:24ch;position:relative}
-  .quote blockquote::before{content:"\201C";color:var(--hp-orange);font-size:120px;line-height:0;position:absolute;left:-60px;top:34px}
-  .quote .by{margin-top:30px;font-size:24px;color:var(--muted)}
-
-  /* LOGO HP en cada slide (marca de agua, esquina sup. derecha) */
+  .quote blockquote:before{content:"\201C";color:#FF5050;font-size:120px;line-height:0;position:absolute;left:-60px;top:34px}
+  .quote .by{margin-top:30px;font-size:24px;color:#aab8d6}
 
   /* CLIMA */
-  .clima .wxbig{display:flex;align-items:center;gap:46px;margin-top:14px;flex-wrap:wrap}
-  .clima .wxbig-ic{font-size:130px;line-height:1}
-  .clima .wxbig-temp{font-size:120px;font-weight:700;line-height:.9;font-variant-numeric:tabular-nums}
-  .clima .wxbig-cond{font-size:30px;color:var(--muted);margin-top:8px}
-  .clima .wxbig-side{display:grid;grid-template-columns:1fr 1fr;gap:16px 40px;margin-left:8px}
-  .clima .wxbig-side .it{display:flex;flex-direction:column}
-  .clima .wxbig-side .it b{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
-  .clima .wxbig-side .it small{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+  .clima .wxbig{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin-top:14px}
+  .clima .wxbig-ic{font-size:130px;line-height:1;margin-right:46px}
+  .clima .wxbig-main{margin-right:46px}
+  .clima .wxbig-temp{font-size:120px;font-weight:700;line-height:.9}
+  .clima .wxbig-cond{font-size:30px;color:#aab8d6;margin-top:8px}
+  .clima .wxbig-side{margin-left:8px}
+  .clima .wxbig-side .it{display:inline-block;vertical-align:top;width:150px;margin:0 30px 14px 0}
+  .clima .wxbig-side .it b{display:block;font-size:34px;font-weight:700}
+  .clima .wxbig-side .it small{display:block;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#aab8d6;margin-top:2px}
 
   /* CUMPLEAÑOS */
-  .cumples{margin-top:10px;overflow:hidden}
-  .cu-track{display:flex;gap:26px;width:max-content}
-  .cu-track.center{width:100%;justify-content:center}
-  .cu-track.scroll{animation:cuscroll var(--dur,30s) linear infinite}
+  .cumples{margin-top:10px;overflow:hidden;text-align:center}
+  .cu-track{display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;-webkit-flex-wrap:wrap;flex-wrap:wrap}
+  .cu-track.scroll{-webkit-flex-wrap:nowrap;flex-wrap:nowrap;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-animation:cuscroll 30s linear infinite;animation:cuscroll 30s linear infinite}
+  @-webkit-keyframes cuscroll{from{-webkit-transform:translateX(0)}to{-webkit-transform:translateX(-50%)}}
   @keyframes cuscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  .cu{flex:0 0 auto;width:248px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:28px 22px;display:flex;flex-direction:column;align-items:center;text-align:center}
-  .cu-photo{width:122px;height:122px;border-radius:50%;background:#0c2a66 center/cover no-repeat;border:3px solid var(--hp-orange);box-shadow:0 6px 18px rgba(0,0,0,.3)}
-  .cu-ini{display:grid;place-items:center;font-size:44px;font-weight:700;color:#fff;background:var(--hp-blue)}
+  .cu{-webkit-flex:0 0 auto;flex:0 0 auto;width:248px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:28px 22px;margin:0 13px;text-align:center}
+  .cu-photo{width:122px;height:122px;border-radius:50%;background-color:#0c2a66;background-position:center;background-size:cover;background-repeat:no-repeat;border:3px solid #FF5050;box-shadow:0 6px 18px rgba(0,0,0,.3);margin:0 auto}
+  .cu-ini{background:#024AD8;line-height:122px;font-size:44px;font-weight:700;color:#fff;text-align:center}
   .cu-name{font-size:25px;font-weight:700;margin-top:18px;line-height:1.15}
-  .cu-when{font-size:18px;color:var(--hp-orange);font-weight:600;margin-top:7px}
-  .cu-empty{font-size:26px;color:var(--muted);margin-top:14px}
+  .cu-when{font-size:18px;color:#FF5050;font-weight:600;margin-top:7px}
+  .cu-empty{font-size:26px;color:#aab8d6;margin-top:14px}
 
   /* FOTO a pantalla completa */
   .foto{padding:0}
-  .foto .foto-bg{position:absolute;top:0;right:0;bottom:0;left:0;background:var(--img) center/cover no-repeat,#0c2a66}
-  .foto::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(0deg,rgba(4,12,32,.92) 0%,rgba(4,12,32,.05) 50%,rgba(4,12,32,.30) 100%)}
+  .foto .foto-bg{position:absolute;top:0;right:0;bottom:0;left:0;background-color:#0c2a66;background-position:center;background-size:cover;background-repeat:no-repeat}
+  .foto:after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(0deg,rgba(4,12,32,.92) 0%,rgba(4,12,32,.05) 50%,rgba(4,12,32,.30) 100%)}
   .foto .foto-cap{position:absolute;left:64px;bottom:60px;z-index:2;max-width:70%}
   .foto .foto-t{font-size:56px;font-weight:700;line-height:1.05}
   .foto .foto-d{font-size:24px;color:#d7e0f5;margin-top:10px}
 
-  /* ---------- PIE / PROGRESO ---------- */
-  .footer{display:flex;align-items:center;gap:18px;padding:14px 56px 22px}
-  .dots{display:flex;gap:10px}
-  .dots i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.22);transition:all .3s}
-  .dots i.on{background:var(--hp-orange);width:34px;border-radius:6px}
-  .footer .tick{margin-left:auto;font-size:15px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+  /* PIE / PROGRESO */
+  .footer{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-flex:0 0 auto;flex:0 0 auto;padding:14px 56px 22px}
+  .dots{display:-webkit-flex;display:flex}
+  .dots i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.22);margin-right:10px;-webkit-transition:all .3s;transition:all .3s}
+  .dots i.on{background:#FF5050;width:34px;border-radius:6px}
+  .footer .tick{margin-left:auto;font-size:15px;color:#aab8d6;letter-spacing:2px;text-transform:uppercase}
   .progress{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.08)}
-  .progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--hp-blue),var(--hp-orange))}
+  .progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#024AD8,#FF5050)}
 
-  /* pista de control discreta (solo aparece al mover el mouse) */
-  .help{position:fixed;left:56px;bottom:34px;font-size:13px;color:rgba(255,255,255,.4);opacity:0;transition:opacity .3s}
+  .help{position:fixed;left:56px;bottom:34px;font-size:13px;color:rgba(255,255,255,.4);opacity:0;-webkit-transition:opacity .3s;transition:opacity .3s}
   body.show-cursor{cursor:default}
   body.show-cursor .help{opacity:1}
 </style>
@@ -399,7 +387,7 @@ function buildCumples(s){
   const cards=list.map(card).join('');
   const carousel=list.length>4;   // si hay muchos, carrusel que se desplaza solo
   const track=carousel
-    ? `<div class="cu-track scroll" style="--dur:${Math.max(18,list.length*4)}s">${cards}${cards}</div>`
+    ? `<div class="cu-track scroll">${cards}${cards}</div>`
     : `<div class="cu-track center">${cards}</div>`;
   return `<div class="slide">
     <div class="eyebrow"><span class="dot"></span>Cumpleaños del mes</div>
@@ -408,8 +396,8 @@ function buildCumples(s){
   </div>`;
 }
 function buildFoto(s){
-  return `<div class="slide foto" style="--img:url('${s.src||''}')">
-    <div class="foto-bg"></div>
+  return `<div class="slide foto">
+    <div class="foto-bg" style="background-image:url('${s.src||''}')"></div>
     <div class="foto-cap"><div class="foto-t">${s.title||''}</div><div class="foto-d">${s.caption||''}</div></div>
   </div>`;
 }
@@ -427,8 +415,8 @@ function render(){
     slidesEl.appendChild(el((BUILDERS[s.type]||buildInfo)(s)));
     dotsEl.appendChild(document.createElement('i'));
   });
-  slideNodes=[...slidesEl.querySelectorAll('.slide')];
-  dotNodes=[...dotsEl.children];
+  slideNodes=Array.prototype.slice.call(slidesEl.querySelectorAll('.slide'));
+  dotNodes=Array.prototype.slice.call(dotsEl.children);
   idx=0; t0=performance.now();
   if(slideNodes.length){ slideNodes[0].classList.add('active'); dotNodes[0].classList.add('on'); }
   refreshClimaDots();
@@ -466,7 +454,7 @@ function tick(){
   document.getElementById('clock').textContent=d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   document.getElementById('today').textContent=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
 }
-function pad(n){return String(n).padStart(2,'0');}
+function pad(n){ n=String(n); return n.length<2 ? ('0'+n) : n; }
 function updateCountdowns(){
   slidesEl.querySelectorAll('.count[data-target]').forEach(c=>{
     const tg=new Date(c.dataset.target).getTime(); if(isNaN(tg))return;
@@ -504,35 +492,34 @@ function refreshClimaDots(){
   // oculta el punto de la slide de clima si no hay datos (queda salteada)
   SLIDES.forEach((s,i)=>{ if(s.type==='clima') dotNodes[i].style.display = weatherOK ? '' : 'none'; });
 }
-async function fetchWeather(){
-  // si la slide de clima no existe, no hace falta pedir nada
-  if(!SLIDES.some(s=>s.type==='clima')) return;
-  const url="https://api.open-meteo.com/v1/forecast?latitude="+WX.lat+"&longitude="+WX.lon
+function fetchWeather(){
+  // si la slide de clima no existe (o el navegador viejo no tiene fetch), no pedimos nada
+  if(!SLIDES.some(function(s){return s.type==='clima';})) return;
+  if(typeof fetch==='undefined'){ weatherOK=false; hideWx_(); return; }
+  var url="https://api.open-meteo.com/v1/forecast?latitude="+WX.lat+"&longitude="+WX.lon
     +"&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
     +"&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FBuenos_Aires";
-  try{
-    const r=await fetch(url,{cache:'no-store'});
+  fetch(url,{cache:'no-store'}).then(function(r){
     if(!r.ok) throw new Error('HTTP '+r.status);
-    const j=await r.json();
-    const cur=j.current, day=j.daily, w=wmo(cur.weather_code);
-    const t=Math.round(cur.temperature_2m);
-    // barra superior
+    return r.json();
+  }).then(function(j){
+    var cur=j.current, day=j.daily, w=wmo(cur.weather_code);
+    var t=Math.round(cur.temperature_2m);
     setTxt('wxTemp',t+'°'); setTxt('wxIc',w[0]);
-    // slide de clima
     setTxt('cIc',w[0]); setTxt('cTemp',t+'°'); setTxt('cCond',w[1]);
     setTxt('cMax',Math.round(day.temperature_2m_max[0])+'°');
     setTxt('cMin',Math.round(day.temperature_2m_min[0])+'°');
     setTxt('cWind',Math.round(cur.wind_speed_10m)+' km/h');
     setTxt('cHum',Math.round(cur.relative_humidity_2m)+'%');
     weatherOK=true;
-    document.getElementById('wx').hidden=false;   // muestra el widget de la barra
-  }catch(e){
+    var wxEl=document.getElementById('wx'); if(wxEl) wxEl.hidden=false;
+    refreshClimaDots();
+  })['catch'](function(){
     // sin internet en la pantalla: ocultamos el clima y la cartelera sigue igual
-    weatherOK=false;
-    document.getElementById('wx').hidden=true;
-  }
-  refreshClimaDots();
+    weatherOK=false; hideWx_(); refreshClimaDots();
+  });
 }
+function hideWx_(){ var wxEl=document.getElementById('wx'); if(wxEl) wxEl.hidden=true; }
 
 // controles
 document.addEventListener('keydown',e=>{
@@ -551,7 +538,7 @@ document.addEventListener('mousemove',()=>{
 
 // ============ CONEXIÓN CON EL BACK OFFICE ============
 const DATA_URL='https://script.google.com/macros/s/AKfycbxAt5gQYspry28ntaEweGr0Wp4myCLObjB9N81Wc4c3OjGEujtUqreuxn57adss2UNPZg/exec';
-const PREVIEW=new URLSearchParams(location.search).get('preview')==='1';
+const PREVIEW=/[?&]preview=1/.test(location.search);
 
 function applyData(data){
   const str=JSON.stringify(data);
@@ -597,12 +584,13 @@ if(PREVIEW){
   setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 20*1000);   // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  const VERSION='10';
+  const VERSION='11';
   function checkVersion(){
+    if(typeof fetch==='undefined') return;
     fetch('version.txt?t='+Date.now(),{cache:'no-store'})
-      .then(r=>r.ok?r.text():null)
-      .then(v=>{ if(v && v.trim() && v.trim()!==VERSION) location.reload(); })
-      .catch(()=>{});
+      .then(function(r){ return r.ok?r.text():null; })
+      .then(function(v){ if(v && v.trim() && v.trim()!==VERSION) location.reload(); })
+      ['catch'](function(){});
   }
   setInterval(checkVersion, 90*1000);   // chequea versión cada 90 s
 }
