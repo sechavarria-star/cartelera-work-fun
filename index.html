@@ -259,8 +259,10 @@ function makeSlides(data){
   if(on("pub_novedades") && (data.novedades||[]).length)
     slides.push({ type:"agenda", eyebrow:"Novedades Work & Fun", title:"Agenda del mes", items:data.novedades, secs:13 });
 
-  if(on("pub_cumples") && (data.cumples||[]).some(c=>(c.date||'').slice(0,2)===mm))
-    slides.push({ type:"cumples", items:data.cumples, secs:11 });
+  // la slide dura lo necesario para que el carrusel muestre TODOS los cumpleaños (~3 s por tarjeta)
+  const cuCount=(data.cumples||[]).filter(c=>(c.date||'').slice(0,2)===mm).length;
+  if(on("pub_cumples") && cuCount)
+    slides.push({ type:"cumples", items:data.cumples, secs: cuCount>4 ? cuCount*3+4 : 11 });
 
   if(on("pub_fotos"))
     (data.fotos||[]).filter(f=>f.src).forEach(f=>
@@ -386,8 +388,9 @@ function buildCumples(s){
   };
   const cards=list.map(card).join('');
   const carousel=list.length>4;   // si hay muchos, carrusel que se desplaza solo
+  const dur=list.length*3;   // una vuelta completa = ~3 s por tarjeta (sincronizado con secs en makeSlides)
   const track=carousel
-    ? `<div class="cu-track scroll">${cards}${cards}</div>`
+    ? `<div class="cu-track scroll" style="-webkit-animation-duration:${dur}s;animation-duration:${dur}s">${cards}${cards}</div>`
     : `<div class="cu-track center">${cards}</div>`;
   return `<div class="slide">
     <div class="eyebrow"><span class="dot"></span>Cumpleaños del mes</div>
@@ -584,7 +587,7 @@ if(PREVIEW){
   setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 20*1000);   // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  const VERSION='11';
+  const VERSION='12';
   function checkVersion(){
     if(typeof fetch==='undefined') return;
     fetch('version.txt?t='+Date.now(),{cache:'no-store'})
