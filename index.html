@@ -390,8 +390,8 @@ function buildCumples(s){
   };
   const cards=list.map(card).join('');
   const carousel=list.length>4;   // si hay muchos, carrusel que se desplaza solo
-  // la vuelta completa del carrusel entra dentro del tiempo de la slide (4 s de margen, mínimo 8 s)
-  const dur=Math.max(8, (parseFloat(s.secs)||list.length*3+4)-4);
+  // la vuelta completa del carrusel entra dentro del tiempo de la slide (2 s de margen, mínimo 8 s)
+  const dur=Math.max(8, (parseFloat(s.secs)||list.length*3+4)-2);
   const track=carousel
     ? `<div class="cu-track scroll" style="-webkit-animation-duration:${dur}s;animation-duration:${dur}s">${cards}${cards}</div>`
     : `<div class="cu-track center">${cards}</div>`;
@@ -425,7 +425,20 @@ function render(){
   dotNodes=Array.prototype.slice.call(dotsEl.children);
   idx=0; t0=performance.now();
   if(slideNodes.length){ slideNodes[0].classList.add('active'); dotNodes[0].classList.add('on'); }
+  syncCarousel();
   refreshClimaDots();
+}
+// Reinicia el carrusel de cumpleaños cada vez que su slide entra en pantalla: la pasada
+// arranca SIEMPRE por el primer cumpleañero y la vuelta completa termina junto con la slide.
+// (Las slides se ocultan con opacity, así que sin esto la animación corre de fondo y se ve empezada.)
+function syncCarousel(){
+  var s=SLIDES[idx]; if(!s || s.type!=='cumples') return;
+  var tr=slideNodes[idx].querySelector('.cu-track.scroll'); if(!tr) return;
+  var dur=Math.max(8,(parseFloat(s.secs)||30)-2)+'s';
+  tr.style.webkitAnimation='none'; tr.style.animation='none';
+  void tr.offsetWidth;                     // fuerza reflow: la animación vuelve a cero
+  tr.style.webkitAnimation=''; tr.style.animation='';
+  tr.style.webkitAnimationDuration=dur; tr.style.animationDuration=dur;
 }
 // ¿se puede mostrar esta slide? (el clima se saltea si no hay datos / no hay internet)
 function visible(i){ return !(SLIDES[i].type==='clima' && !weatherOK); }
@@ -438,6 +451,7 @@ function show(i, dir){
   idx=n;
   slideNodes[idx].classList.add('active');
   dotNodes[idx].classList.add('on');
+  syncCarousel();
   t0=performance.now();
 }
 function next(){ show(idx+1, 1); }
@@ -591,7 +605,7 @@ if(PREVIEW){
   setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 20*1000);   // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  const VERSION='14';
+  const VERSION='15';
   function checkVersion(){
     if(typeof fetch==='undefined') return;
     fetch('version.txt?t='+Date.now(),{cache:'no-store'})
