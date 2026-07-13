@@ -199,6 +199,17 @@
 <div class="help">Flechas ← → cambian de slide · barra espaciadora pausa · F11 pantalla completa</div>
 
 <script>
+// Muestra en pantalla cualquier error de JS (clave para depurar en la TV, donde no hay consola).
+window.onerror = function (msg, src, line) {
+  try {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:12px;bottom:12px;max-width:90%;background:#b00020;color:#fff;padding:10px 14px;border-radius:8px;font:13px/1.4 monospace;z-index:9999;word-wrap:break-word';
+    d.textContent = 'Error JS: ' + msg + ' (linea ' + line + ')';
+    (document.body || document.documentElement).appendChild(d);
+  } catch (e) {}
+};
+</script>
+<script>
 /* =================================================================
    CONTENIDO DE LA CARTELERA  ·  Work & Fun '26
    -----------------------------------------------------------------
@@ -219,412 +230,564 @@
    "secs" = segundos que dura esa slide (opcional, por defecto 10).
    ================================================================= */
 // Contenido por defecto: se usa si la cartelera no puede leer el back office (p. ej. sin internet).
-const DEFAULT_DATA = {
-  novedades:[
-    {dia:"Lunes", when:"09:30", what:"Kickoff y objetivos del trimestre", where:"Sala Andes"},
-    {dia:"Miércoles", when:"13:00", what:"Almuerzo del equipo", where:"Patio central"},
-    {dia:"Jueves", when:"16:00", what:"Demo & coffee", where:"Hub creativo"},
-    {dia:"Viernes", when:"17:30", what:"After: Work & Fun '26", where:"Terraza"}
-  ],
-  cumples:[
-    {date:"06-08", name:"Lucía Fernández"},
-    {date:"06-21", name:"Martín Gómez"},
-    {date:"06-29", name:"Sofía Ramírez"},
-    {date:"07-04", name:"Diego Pérez"}
-  ],
-  fotos:[],
-  config:{
-    portada_hola:"Bienvenidos al equipo",
-    portada_tag:"Donde el trabajo se hace... y se disfruta.",
-    clima_activo:"si", clima_ciudad:"Buenos Aires", clima_lat:"-34.6131", clima_lon:"-58.3772",
-    evento_titulo:"Falta para la fiesta de fin de año", evento_fecha:"2026-12-19T19:00:00",
-    frase_texto:"Solos llegamos rápido; juntos llegamos lejos.", frase_autor:"— Equipo Work & Fun '26"
+var DEFAULT_DATA = {
+  novedades: [{
+    dia: "Lunes",
+    when: "09:30",
+    what: "Kickoff y objetivos del trimestre",
+    where: "Sala Andes"
+  }, {
+    dia: "Miércoles",
+    when: "13:00",
+    what: "Almuerzo del equipo",
+    where: "Patio central"
+  }, {
+    dia: "Jueves",
+    when: "16:00",
+    what: "Demo & coffee",
+    where: "Hub creativo"
+  }, {
+    dia: "Viernes",
+    when: "17:30",
+    what: "After: Work & Fun '26",
+    where: "Terraza"
+  }],
+  cumples: [{
+    date: "06-08",
+    name: "Lucía Fernández"
+  }, {
+    date: "06-21",
+    name: "Martín Gómez"
+  }, {
+    date: "06-29",
+    name: "Sofía Ramírez"
+  }, {
+    date: "07-04",
+    name: "Diego Pérez"
+  }],
+  fotos: [],
+  config: {
+    portada_hola: "Bienvenidos al equipo",
+    portada_tag: "Donde el trabajo se hace... y se disfruta.",
+    clima_activo: "si",
+    clima_ciudad: "Buenos Aires",
+    clima_lat: "-34.6131",
+    clima_lon: "-58.3772",
+    evento_titulo: "Falta para la fiesta de fin de año",
+    evento_fecha: "2026-12-19T19:00:00",
+    frase_texto: "Solos llegamos rápido; juntos llegamos lejos.",
+    frase_autor: "— Equipo Work & Fun '26"
   }
 };
 
 // Arma la lista de slides a partir del contenido que viene del back office.
-function makeSlides(data){
+function makeSlides(data) {
   data = data || DEFAULT_DATA;
-  const cfg = data.config || {};
-  const mm = pad(new Date().getMonth()+1);
-  const slides = [];
-
-  const on = k => (cfg[k]||"si")!=="no";   // cada sección se publica salvo que esté en "no"
+  var cfg = data.config || {};
+  var mm = pad(new Date().getMonth() + 1);
+  var slides = [];
+  var on = function on(k) {
+    return (cfg[k] || "si") !== "no";
+  }; // cada sección se publica salvo que esté en "no"
   // tiempo por sección configurable desde el back office (secs_*); si no hay valor válido, usa el sugerido
-  const secsOf = (k,def)=>{ const v=parseFloat(cfg['secs_'+k]); return (v>=3&&v<=600)?v:def; };
-
-  if(on("pub_portada"))
-    slides.push({ type:"cover", hello:cfg.portada_hola||"Bienvenidos al equipo",
-      title:["Work ","&"," Fun ","'26"], tag:cfg.portada_tag||"",
-      chips:[{text:"Equipo HP",style:"blue"},{text:"Edición 2026",style:""},{text:"#WorkAndFun",style:"orange"}], secs:secsOf("portada",9) });
-
-  if(on("pub_novedades") && (data.novedades||[]).length)
-    slides.push({ type:"agenda", eyebrow:"Novedades Work & Fun", title:"Agenda del mes", items:data.novedades, secs:secsOf("novedades",13) });
+  var secsOf = function secsOf(k, def) {
+    var v = parseFloat(cfg['secs_' + k]);
+    return v >= 3 && v <= 600 ? v : def;
+  };
+  if (on("pub_portada")) slides.push({
+    type: "cover",
+    hello: cfg.portada_hola || "Bienvenidos al equipo",
+    title: ["Work ", "&", " Fun ", "'26"],
+    tag: cfg.portada_tag || "",
+    chips: [{
+      text: "Equipo HP",
+      style: "blue"
+    }, {
+      text: "Edición 2026",
+      style: ""
+    }, {
+      text: "#WorkAndFun",
+      style: "orange"
+    }],
+    secs: secsOf("portada", 9)
+  });
+  if (on("pub_novedades") && (data.novedades || []).length) slides.push({
+    type: "agenda",
+    eyebrow: "Novedades Work & Fun",
+    title: "Agenda del mes",
+    items: data.novedades,
+    secs: secsOf("novedades", 13)
+  });
 
   // sugerido: lo necesario para que el carrusel muestre TODOS los cumpleaños (~3 s por tarjeta)
-  const cuCount=(data.cumples||[]).filter(c=>(c.date||'').slice(0,2)===mm).length;
-  if(on("pub_cumples") && cuCount)
-    slides.push({ type:"cumples", items:data.cumples, secs: secsOf("cumples", cuCount>4 ? cuCount*3+4 : 11) });
-
-  if(on("pub_fotos"))
-    (data.fotos||[]).filter(f=>f.src).forEach(f=>
-      slides.push({ type:"foto", src:f.src, title:f.title||"", caption:f.caption||"", secs:secsOf("fotos",9) }));
-
-  if(on("clima_activo"))
-    slides.push({ type:"clima", ciudad:cfg.clima_ciudad||"Buenos Aires", secs:secsOf("clima",10) });
-
-  if(on("pub_countdown") && cfg.evento_fecha)
-    slides.push({ type:"countdown", eyebrow:"Cuenta regresiva", title:cfg.evento_titulo||"", target:cfg.evento_fecha, secs:secsOf("countdown",11) });
-
-  if(on("pub_frase") && cfg.frase_texto)
-    slides.push({ type:"quote", text:cfg.frase_texto, by:cfg.frase_autor||"", secs:secsOf("frase",9) });
-
+  var cuCount = (data.cumples || []).filter(function (c) {
+    return (c.date || '').slice(0, 2) === mm;
+  }).length;
+  if (on("pub_cumples") && cuCount) slides.push({
+    type: "cumples",
+    items: data.cumples,
+    secs: secsOf("cumples", cuCount > 4 ? cuCount * 3 + 4 : 11)
+  });
+  if (on("pub_fotos")) (data.fotos || []).filter(function (f) {
+    return f.src;
+  }).forEach(function (f) {
+    return slides.push({
+      type: "foto",
+      src: f.src,
+      title: f.title || "",
+      caption: f.caption || "",
+      secs: secsOf("fotos", 9)
+    });
+  });
+  if (on("clima_activo")) slides.push({
+    type: "clima",
+    ciudad: cfg.clima_ciudad || "Buenos Aires",
+    secs: secsOf("clima", 10)
+  });
+  if (on("pub_countdown") && cfg.evento_fecha) slides.push({
+    type: "countdown",
+    eyebrow: "Cuenta regresiva",
+    title: cfg.evento_titulo || "",
+    target: cfg.evento_fecha,
+    secs: secsOf("countdown", 11)
+  });
+  if (on("pub_frase") && cfg.frase_texto) slides.push({
+    type: "quote",
+    text: cfg.frase_texto,
+    by: cfg.frase_autor || "",
+    secs: secsOf("frase", 9)
+  });
   return slides;
 }
 
 /* =================== Motor de la cartelera =================== */
-const slidesEl = document.getElementById('slides');
-const dotsEl   = document.getElementById('dots');
-const barEl    = document.getElementById('bar');
-const DEFAULT_SECS = 10;
-
-function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; }
-
-function buildCover(s){
-  const chips=(s.chips||[]).map(c=>`<span class="chip ${c.style||''}">${c.text}</span>`).join('');
-  const title=(s.title||[]).map(p=> p==="&" ? `<span class="amp">&amp;</span>` : p).join('');
-  return `<div class="slide cover">
-    <div class="hello">${s.hello||''}</div>
-    <h1>${title}</h1>
-    <div class="tag">${s.tag||''}</div>
-    <div class="chips">${chips}</div>
-  </div>`;
+var slidesEl = document.getElementById('slides');
+var dotsEl = document.getElementById('dots');
+var barEl = document.getElementById('bar');
+var DEFAULT_SECS = 10;
+function el(html) {
+  var t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
 }
-function buildAgenda(s){
-  const rows=(s.items||[]).map(i=>{
-    const dia=i.dia||'', when=i.when||'';
-    const left = (dia&&when) ? `<div class="rday">${dia}</div><div class="rhora">${when}</div>`
-                            : `<div class="rday">${dia||when}</div>`;
-    return `<div class="row"><div class="when">${left}</div><div class="what">${i.what||''}</div><div class="where">${i.where||''}</div></div>`;
+function buildCover(s) {
+  var chips = (s.chips || []).map(function (c) {
+    return "<span class=\"chip ".concat(c.style || '', "\">").concat(c.text, "</span>");
   }).join('');
-  return `<div class="slide">
-    <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
-    <h1>${s.title||''}</h1>
-    <div class="rows">${rows}</div>
-  </div>`;
+  var title = (s.title || []).map(function (p) {
+    return p === "&" ? "<span class=\"amp\">&amp;</span>" : p;
+  }).join('');
+  return "<div class=\"slide cover\">\n    <div class=\"hello\">".concat(s.hello || '', "</div>\n    <h1>").concat(title, "</h1>\n    <div class=\"tag\">").concat(s.tag || '', "</div>\n    <div class=\"chips\">").concat(chips, "</div>\n  </div>");
 }
-function buildAnuncios(s){
-  const items=(s.items||[]).map(i=>`<li><div class="ic">${i.icon||'•'}</div><div><div class="bt">${i.title||''}</div><div class="bd">${i.desc||''}</div></div></li>`).join('');
-  return `<div class="slide">
-    <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
-    <h1>${s.title||''}</h1>
-    <ul class="bullets">${items}</ul>
-  </div>`;
+function buildAgenda(s) {
+  var rows = (s.items || []).map(function (i) {
+    var dia = i.dia || '',
+      when = i.when || '';
+    var left = dia && when ? "<div class=\"rday\">".concat(dia, "</div><div class=\"rhora\">").concat(when, "</div>") : "<div class=\"rday\">".concat(dia || when, "</div>");
+    return "<div class=\"row\"><div class=\"when\">".concat(left, "</div><div class=\"what\">").concat(i.what || '', "</div><div class=\"where\">").concat(i.where || '', "</div></div>");
+  }).join('');
+  return "<div class=\"slide\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>".concat(s.eyebrow || '', "</div>\n    <h1>").concat(s.title || '', "</h1>\n    <div class=\"rows\">").concat(rows, "</div>\n  </div>");
 }
-function buildCountdown(s){
-  return `<div class="slide count" data-target="${s.target||''}">
-    <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
-    <h1>${s.title||''}</h1>
-    <div class="units">
-      <div class="u"><div class="n" data-u="d">0</div><div class="l">días</div></div>
-      <div class="u"><div class="n" data-u="h">0</div><div class="l">horas</div></div>
-      <div class="u"><div class="n" data-u="m">0</div><div class="l">min</div></div>
-      <div class="u"><div class="n" data-u="s">0</div><div class="l">seg</div></div>
-    </div>
-  </div>`;
+function buildAnuncios(s) {
+  var items = (s.items || []).map(function (i) {
+    return "<li><div class=\"ic\">".concat(i.icon || '•', "</div><div><div class=\"bt\">").concat(i.title || '', "</div><div class=\"bd\">").concat(i.desc || '', "</div></div></li>");
+  }).join('');
+  return "<div class=\"slide\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>".concat(s.eyebrow || '', "</div>\n    <h1>").concat(s.title || '', "</h1>\n    <ul class=\"bullets\">").concat(items, "</ul>\n  </div>");
 }
-function buildQuote(s){
-  return `<div class="slide quote">
-    <blockquote>${s.text||''}</blockquote>
-    <div class="by">${s.by||''}</div>
-  </div>`;
+function buildCountdown(s) {
+  return "<div class=\"slide count\" data-target=\"".concat(s.target || '', "\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>").concat(s.eyebrow || '', "</div>\n    <h1>").concat(s.title || '', "</h1>\n    <div class=\"units\">\n      <div class=\"u\"><div class=\"n\" data-u=\"d\">0</div><div class=\"l\">d\xEDas</div></div>\n      <div class=\"u\"><div class=\"n\" data-u=\"h\">0</div><div class=\"l\">horas</div></div>\n      <div class=\"u\"><div class=\"n\" data-u=\"m\">0</div><div class=\"l\">min</div></div>\n      <div class=\"u\"><div class=\"n\" data-u=\"s\">0</div><div class=\"l\">seg</div></div>\n    </div>\n  </div>");
 }
-function buildInfo(s){
-  return `<div class="slide">
-    <div class="eyebrow"><span class="dot"></span>${s.eyebrow||''}</div>
-    <h1>${s.title||''}</h1>
-    <p class="lead">${s.body||''}</p>
-  </div>`;
+function buildQuote(s) {
+  return "<div class=\"slide quote\">\n    <blockquote>".concat(s.text || '', "</blockquote>\n    <div class=\"by\">").concat(s.by || '', "</div>\n  </div>");
 }
-function buildClima(s){
-  return `<div class="slide clima">
-    <div class="eyebrow"><span class="dot"></span>El clima ahora</div>
-    <h1>${s.ciudad||'Buenos Aires'}</h1>
-    <div class="wxbig">
-      <div class="wxbig-ic" id="cIc">⛅</div>
-      <div class="wxbig-main">
-        <div class="wxbig-temp" id="cTemp">--°</div>
-        <div class="wxbig-cond" id="cCond">Conectando…</div>
-      </div>
-      <div class="wxbig-side">
-        <div class="it"><b id="cMax">--°</b><small>Máxima</small></div>
-        <div class="it"><b id="cMin">--°</b><small>Mínima</small></div>
-        <div class="it"><b id="cWind">-- km/h</b><small>Viento</small></div>
-        <div class="it"><b id="cHum">--%</b><small>Humedad</small></div>
-      </div>
-    </div>
-  </div>`;
+function buildInfo(s) {
+  return "<div class=\"slide\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>".concat(s.eyebrow || '', "</div>\n    <h1>").concat(s.title || '', "</h1>\n    <p class=\"lead\">").concat(s.body || '', "</p>\n  </div>");
 }
-function buildCumples(s){
-  const now=new Date();
-  const mm=pad(now.getMonth()+1);
-  const monthName=now.toLocaleDateString('es-AR',{month:'long'});
-  const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
-  const list=(s.items||[]).filter(i=>(i.date||'').slice(0,2)===mm)
-    .sort((a,b)=>a.date.localeCompare(b.date));
-  if(!list.length){
-    return `<div class="slide">
-      <div class="eyebrow"><span class="dot"></span>Cumpleaños del mes</div>
-      <h1>🎂 ${cap(monthName)}</h1>
-      <div class="cu-empty">Sin cumpleaños este mes 🎈</div>
-    </div>`;
-  }
-  const card=i=>{
-    const day=parseInt(i.date.slice(3),10);
-    const ini=(i.name||'').trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
-    const photo=i.foto
-      ? `<div class="cu-photo" style="background-image:url('${i.foto}')"></div>`
-      : `<div class="cu-photo cu-ini">${ini||'🎂'}</div>`;
-    const fecha = `${day} de ${monthName}` + (i.dia ? ` · ${i.dia}` : '');
-    return `<div class="cu">${photo}<div class="cu-name">${i.name||''}</div><div class="cu-when">${fecha}</div></div>`;
+function buildClima(s) {
+  return "<div class=\"slide clima\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>El clima ahora</div>\n    <h1>".concat(s.ciudad || 'Buenos Aires', "</h1>\n    <div class=\"wxbig\">\n      <div class=\"wxbig-ic\" id=\"cIc\">\u26C5</div>\n      <div class=\"wxbig-main\">\n        <div class=\"wxbig-temp\" id=\"cTemp\">--\xB0</div>\n        <div class=\"wxbig-cond\" id=\"cCond\">Conectando\u2026</div>\n      </div>\n      <div class=\"wxbig-side\">\n        <div class=\"it\"><b id=\"cMax\">--\xB0</b><small>M\xE1xima</small></div>\n        <div class=\"it\"><b id=\"cMin\">--\xB0</b><small>M\xEDnima</small></div>\n        <div class=\"it\"><b id=\"cWind\">-- km/h</b><small>Viento</small></div>\n        <div class=\"it\"><b id=\"cHum\">--%</b><small>Humedad</small></div>\n      </div>\n    </div>\n  </div>");
+}
+function buildCumples(s) {
+  var now = new Date();
+  var mm = pad(now.getMonth() + 1);
+  var monthName = now.toLocaleDateString('es-AR', {
+    month: 'long'
+  });
+  var cap = function cap(t) {
+    return t.charAt(0).toUpperCase() + t.slice(1);
   };
-  const cards=list.map(card).join('');
-  const carousel=list.length>4;   // si hay muchos, carrusel; lo desplaza el motor en sincronía con la barra de tiempo
-  const track=carousel
-    ? `<div class="cu-track scroll">${cards}</div>`
-    : `<div class="cu-track center">${cards}</div>`;
-  return `<div class="slide">
-    <div class="eyebrow"><span class="dot"></span>Cumpleaños del mes</div>
-    <h1>🎂 ${cap(monthName)}</h1>
-    <div class="cumples">${track}</div>
-  </div>`;
+  var list = (s.items || []).filter(function (i) {
+    return (i.date || '').slice(0, 2) === mm;
+  }).sort(function (a, b) {
+    return a.date.localeCompare(b.date);
+  });
+  if (!list.length) {
+    return "<div class=\"slide\">\n      <div class=\"eyebrow\"><span class=\"dot\"></span>Cumplea\xF1os del mes</div>\n      <h1>\uD83C\uDF82 ".concat(cap(monthName), "</h1>\n      <div class=\"cu-empty\">Sin cumplea\xF1os este mes \uD83C\uDF88</div>\n    </div>");
+  }
+  var card = function card(i) {
+    var day = parseInt(i.date.slice(3), 10);
+    var ini = (i.name || '').trim().split(/\s+/).map(function (w) {
+      return w[0] || '';
+    }).slice(0, 2).join('').toUpperCase();
+    var photo = i.foto ? "<div class=\"cu-photo\" style=\"background-image:url('".concat(i.foto, "')\"></div>") : "<div class=\"cu-photo cu-ini\">".concat(ini || '🎂', "</div>");
+    var fecha = "".concat(day, " de ").concat(monthName) + (i.dia ? " \xB7 ".concat(i.dia) : '');
+    return "<div class=\"cu\">".concat(photo, "<div class=\"cu-name\">").concat(i.name || '', "</div><div class=\"cu-when\">").concat(fecha, "</div></div>");
+  };
+  var cards = list.map(card).join('');
+  var carousel = list.length > 4; // si hay muchos, carrusel; lo desplaza el motor en sincronía con la barra de tiempo
+  var track = carousel ? "<div class=\"cu-track scroll\">".concat(cards, "</div>") : "<div class=\"cu-track center\">".concat(cards, "</div>");
+  return "<div class=\"slide\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>Cumplea\xF1os del mes</div>\n    <h1>\uD83C\uDF82 ".concat(cap(monthName), "</h1>\n    <div class=\"cumples\">").concat(track, "</div>\n  </div>");
 }
-function buildFoto(s){
-  return `<div class="slide foto">
-    <div class="foto-bg" style="background-image:url('${s.src||''}')"></div>
-    <div class="foto-cap"><div class="foto-t">${s.title||''}</div><div class="foto-d">${s.caption||''}</div></div>
-  </div>`;
+function buildFoto(s) {
+  return "<div class=\"slide foto\">\n    <div class=\"foto-bg\" style=\"background-image:url('".concat(s.src || '', "')\"></div>\n    <div class=\"foto-cap\"><div class=\"foto-t\">").concat(s.title || '', "</div><div class=\"foto-d\">").concat(s.caption || '', "</div></div>\n  </div>");
 }
-const BUILDERS={cover:buildCover,agenda:buildAgenda,anuncios:buildAnuncios,countdown:buildCountdown,quote:buildQuote,clima:buildClima,cumples:buildCumples,foto:buildFoto,info:buildInfo};
+var BUILDERS = {
+  cover: buildCover,
+  agenda: buildAgenda,
+  anuncios: buildAnuncios,
+  countdown: buildCountdown,
+  quote: buildQuote,
+  clima: buildClima,
+  cumples: buildCumples,
+  foto: buildFoto,
+  info: buildInfo
+};
 
 // estado del motor
-let SLIDES=[], slideNodes=[], dotNodes=[], idx=0, paused=false, t0=performance.now(), raf, weatherOK=false, started=false, lastDataStr='';
-let WX={lat:-34.6131, lon:-58.3772};
+var SLIDES = [],
+  slideNodes = [],
+  dotNodes = [],
+  idx = 0,
+  paused = false,
+  t0 = performance.now(),
+  raf,
+  weatherOK = false,
+  started = false,
+  lastDataStr = '';
+var WX = {
+  lat: -34.6131,
+  lon: -58.3772
+};
 
 // (re)dibuja todas las slides a partir de SLIDES
-function render(){
-  slidesEl.querySelectorAll('.slide').forEach(n=>n.remove());
-  dotsEl.innerHTML='';
-  SLIDES.forEach(s=>{
-    slidesEl.appendChild(el((BUILDERS[s.type]||buildInfo)(s)));
+function render() {
+  slidesEl.querySelectorAll('.slide').forEach(function (n) {
+    return n.remove();
+  });
+  dotsEl.innerHTML = '';
+  SLIDES.forEach(function (s) {
+    slidesEl.appendChild(el((BUILDERS[s.type] || buildInfo)(s)));
     dotsEl.appendChild(document.createElement('i'));
   });
-  slideNodes=Array.prototype.slice.call(slidesEl.querySelectorAll('.slide'));
-  dotNodes=Array.prototype.slice.call(dotsEl.children);
-  idx=0; t0=performance.now();
-  if(slideNodes.length){ slideNodes[0].classList.add('active'); dotNodes[0].classList.add('on'); }
+  slideNodes = Array.prototype.slice.call(slidesEl.querySelectorAll('.slide'));
+  dotNodes = Array.prototype.slice.call(dotsEl.children);
+  idx = 0;
+  t0 = performance.now();
+  if (slideNodes.length) {
+    slideNodes[0].classList.add('active');
+    dotNodes[0].classList.add('on');
+  }
   refreshClimaDots();
 }
 // Desplaza el carrusel de cumpleaños en sincronía EXACTA con la barra de tiempo de la slide:
 // arranca en el primer cumpleañero al entrar y termina anclado en los últimos un poco antes
 // del cambio de slide (así la última persona siempre se ve, y no hay "vuelta a empezar").
-function driveCumples(p){
-  var s=SLIDES[idx]; if(!s || s.type!=='cumples') return;
-  var tr=slideNodes[idx].querySelector('.cu-track.scroll'); if(!tr) return;
-  var travel=tr.scrollWidth - tr.parentNode.clientWidth;   // cuánto hay que recorrer para llegar al final
-  if(travel<=0) return;
-  var q=Math.min(1, p/0.94);                               // completa el recorrido al 94% del tiempo y ahí se queda
-  var x=-Math.round(travel*q);
-  tr.style.webkitTransform='translateX('+x+'px)';
-  tr.style.transform='translateX('+x+'px)';
+function driveCumples(p) {
+  var s = SLIDES[idx];
+  if (!s || s.type !== 'cumples') return;
+  var tr = slideNodes[idx].querySelector('.cu-track.scroll');
+  if (!tr) return;
+  var travel = tr.scrollWidth - tr.parentNode.clientWidth; // cuánto hay que recorrer para llegar al final
+  if (travel <= 0) return;
+  var q = Math.min(1, p / 0.94); // completa el recorrido al 94% del tiempo y ahí se queda
+  var x = -Math.round(travel * q);
+  tr.style.webkitTransform = 'translateX(' + x + 'px)';
+  tr.style.transform = 'translateX(' + x + 'px)';
 }
 // ¿se puede mostrar esta slide? (el clima se saltea si no hay datos / no hay internet)
-function visible(i){ return !(SLIDES[i].type==='clima' && !weatherOK); }
-function show(i, dir){
+function visible(i) {
+  return !(SLIDES[i].type === 'clima' && !weatherOK);
+}
+function show(i, dir) {
   dir = dir || 1;
-  let n=(i+SLIDES.length)%SLIDES.length, guard=0;
-  while(!visible(n) && guard++<SLIDES.length){ n=(n+dir+SLIDES.length)%SLIDES.length; }
+  var n = (i + SLIDES.length) % SLIDES.length,
+    guard = 0;
+  while (!visible(n) && guard++ < SLIDES.length) {
+    n = (n + dir + SLIDES.length) % SLIDES.length;
+  }
   slideNodes[idx].classList.remove('active');
   dotNodes[idx].classList.remove('on');
-  idx=n;
+  idx = n;
   slideNodes[idx].classList.add('active');
   dotNodes[idx].classList.add('on');
-  t0=performance.now();
+  t0 = performance.now();
 }
-function next(){ show(idx+1, 1); }
-function prev(){ show(idx-1, -1); }
-
-function loop(now){
-  const dur=(SLIDES[idx].secs||DEFAULT_SECS)*1000;
-  if(!paused){
-    const p=Math.min(1,(now-t0)/dur);
-    barEl.style.width=(p*100)+'%';
+function next() {
+  show(idx + 1, 1);
+}
+function prev() {
+  show(idx - 1, -1);
+}
+function loop(now) {
+  var dur = (SLIDES[idx].secs || DEFAULT_SECS) * 1000;
+  if (!paused) {
+    var p = Math.min(1, (now - t0) / dur);
+    barEl.style.width = p * 100 + '%';
     driveCumples(p);
-    if(p>=1) next();
+    if (p >= 1) next();
   }
   updateCountdowns();
-  raf=requestAnimationFrame(loop);
+  raf = requestAnimationFrame(loop);
 }
 
 // reloj
-function tick(){
-  const d=new Date();
-  document.getElementById('clock').textContent=d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('today').textContent=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+function tick() {
+  var d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  document.getElementById('today').textContent = d.toLocaleDateString('es-AR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  });
 }
-function pad(n){ n=String(n); return n.length<2 ? ('0'+n) : n; }
-function updateCountdowns(){
-  slidesEl.querySelectorAll('.count[data-target]').forEach(c=>{
-    const tg=new Date(c.dataset.target).getTime(); if(isNaN(tg))return;
-    let diff=Math.max(0,tg-Date.now());
-    const d=Math.floor(diff/864e5); diff-=d*864e5;
-    const h=Math.floor(diff/36e5); diff-=h*36e5;
-    const m=Math.floor(diff/6e4); diff-=m*6e4;
-    const s=Math.floor(diff/1e3);
-    c.querySelector('[data-u=d]').textContent=d;
-    c.querySelector('[data-u=h]').textContent=pad(h);
-    c.querySelector('[data-u=m]').textContent=pad(m);
-    c.querySelector('[data-u=s]').textContent=pad(s);
+function pad(n) {
+  n = String(n);
+  return n.length < 2 ? '0' + n : n;
+}
+function updateCountdowns() {
+  slidesEl.querySelectorAll('.count[data-target]').forEach(function (c) {
+    var tg = new Date(c.dataset.target).getTime();
+    if (isNaN(tg)) return;
+    var diff = Math.max(0, tg - Date.now());
+    var d = Math.floor(diff / 864e5);
+    diff -= d * 864e5;
+    var h = Math.floor(diff / 36e5);
+    diff -= h * 36e5;
+    var m = Math.floor(diff / 6e4);
+    diff -= m * 6e4;
+    var s = Math.floor(diff / 1e3);
+    c.querySelector('[data-u=d]').textContent = d;
+    c.querySelector('[data-u=h]').textContent = pad(h);
+    c.querySelector('[data-u=m]').textContent = pad(m);
+    c.querySelector('[data-u=s]').textContent = pad(s);
   });
 }
 
 // ============ CLIMA EN VIVO · Buenos Aires (Open-Meteo, sin API key) ============
 // Códigos WMO -> emoji + texto en español
-function wmo(c){
-  const M={
-    0:['☀️','Despejado'],1:['🌤️','Mayormente despejado'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],
-    45:['🌫️','Niebla'],48:['🌫️','Niebla con escarcha'],
-    51:['🌦️','Llovizna leve'],53:['🌦️','Llovizna'],55:['🌦️','Llovizna intensa'],
-    56:['🌧️','Llovizna helada'],57:['🌧️','Llovizna helada'],
-    61:['🌧️','Lluvia leve'],63:['🌧️','Lluvia'],65:['🌧️','Lluvia intensa'],
-    66:['🌧️','Lluvia helada'],67:['🌧️','Lluvia helada'],
-    71:['🌨️','Nieve leve'],73:['🌨️','Nieve'],75:['🌨️','Nieve intensa'],77:['🌨️','Nieve'],
-    80:['🌦️','Chaparrones'],81:['🌦️','Chaparrones'],82:['⛈️','Chaparrones fuertes'],
-    85:['🌨️','Nevadas'],86:['🌨️','Nevadas'],
-    95:['⛈️','Tormenta'],96:['⛈️','Tormenta con granizo'],99:['⛈️','Tormenta con granizo']
+function wmo(c) {
+  var M = {
+    0: ['☀️', 'Despejado'],
+    1: ['🌤️', 'Mayormente despejado'],
+    2: ['⛅', 'Parcialmente nublado'],
+    3: ['☁️', 'Nublado'],
+    45: ['🌫️', 'Niebla'],
+    48: ['🌫️', 'Niebla con escarcha'],
+    51: ['🌦️', 'Llovizna leve'],
+    53: ['🌦️', 'Llovizna'],
+    55: ['🌦️', 'Llovizna intensa'],
+    56: ['🌧️', 'Llovizna helada'],
+    57: ['🌧️', 'Llovizna helada'],
+    61: ['🌧️', 'Lluvia leve'],
+    63: ['🌧️', 'Lluvia'],
+    65: ['🌧️', 'Lluvia intensa'],
+    66: ['🌧️', 'Lluvia helada'],
+    67: ['🌧️', 'Lluvia helada'],
+    71: ['🌨️', 'Nieve leve'],
+    73: ['🌨️', 'Nieve'],
+    75: ['🌨️', 'Nieve intensa'],
+    77: ['🌨️', 'Nieve'],
+    80: ['🌦️', 'Chaparrones'],
+    81: ['🌦️', 'Chaparrones'],
+    82: ['⛈️', 'Chaparrones fuertes'],
+    85: ['🌨️', 'Nevadas'],
+    86: ['🌨️', 'Nevadas'],
+    95: ['⛈️', 'Tormenta'],
+    96: ['⛈️', 'Tormenta con granizo'],
+    99: ['⛈️', 'Tormenta con granizo']
   };
-  return M[c]||['🌡️','—'];
+  return M[c] || ['🌡️', '—'];
 }
-function setTxt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
-function refreshClimaDots(){
+function setTxt(id, v) {
+  var e = document.getElementById(id);
+  if (e) e.textContent = v;
+}
+function refreshClimaDots() {
   // oculta el punto de la slide de clima si no hay datos (queda salteada)
-  SLIDES.forEach((s,i)=>{ if(s.type==='clima') dotNodes[i].style.display = weatherOK ? '' : 'none'; });
-}
-function fetchWeather(){
-  // si la slide de clima no existe (o el navegador viejo no tiene fetch), no pedimos nada
-  if(!SLIDES.some(function(s){return s.type==='clima';})) return;
-  if(typeof fetch==='undefined'){ weatherOK=false; hideWx_(); return; }
-  var url="https://api.open-meteo.com/v1/forecast?latitude="+WX.lat+"&longitude="+WX.lon
-    +"&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
-    +"&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FBuenos_Aires";
-  fetch(url,{cache:'no-store'}).then(function(r){
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.json();
-  }).then(function(j){
-    var cur=j.current, day=j.daily, w=wmo(cur.weather_code);
-    var t=Math.round(cur.temperature_2m);
-    setTxt('wxTemp',t+'°'); setTxt('wxIc',w[0]);
-    setTxt('cIc',w[0]); setTxt('cTemp',t+'°'); setTxt('cCond',w[1]);
-    setTxt('cMax',Math.round(day.temperature_2m_max[0])+'°');
-    setTxt('cMin',Math.round(day.temperature_2m_min[0])+'°');
-    setTxt('cWind',Math.round(cur.wind_speed_10m)+' km/h');
-    setTxt('cHum',Math.round(cur.relative_humidity_2m)+'%');
-    weatherOK=true;
-    var wxEl=document.getElementById('wx'); if(wxEl) wxEl.hidden=false;
-    refreshClimaDots();
-  })['catch'](function(){
-    // sin internet en la pantalla: ocultamos el clima y la cartelera sigue igual
-    weatherOK=false; hideWx_(); refreshClimaDots();
+  SLIDES.forEach(function (s, i) {
+    if (s.type === 'clima') dotNodes[i].style.display = weatherOK ? '' : 'none';
   });
 }
-function hideWx_(){ var wxEl=document.getElementById('wx'); if(wxEl) wxEl.hidden=true; }
+function fetchWeather() {
+  // si la slide de clima no existe (o el navegador viejo no tiene fetch), no pedimos nada
+  if (!SLIDES.some(function (s) {
+    return s.type === 'clima';
+  })) return;
+  if (typeof fetch === 'undefined') {
+    weatherOK = false;
+    hideWx_();
+    return;
+  }
+  var url = "https://api.open-meteo.com/v1/forecast?latitude=" + WX.lat + "&longitude=" + WX.lon + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m" + "&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FBuenos_Aires";
+  fetch(url, {
+    cache: 'no-store'
+  }).then(function (r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function (j) {
+    var cur = j.current,
+      day = j.daily,
+      w = wmo(cur.weather_code);
+    var t = Math.round(cur.temperature_2m);
+    setTxt('wxTemp', t + '°');
+    setTxt('wxIc', w[0]);
+    setTxt('cIc', w[0]);
+    setTxt('cTemp', t + '°');
+    setTxt('cCond', w[1]);
+    setTxt('cMax', Math.round(day.temperature_2m_max[0]) + '°');
+    setTxt('cMin', Math.round(day.temperature_2m_min[0]) + '°');
+    setTxt('cWind', Math.round(cur.wind_speed_10m) + ' km/h');
+    setTxt('cHum', Math.round(cur.relative_humidity_2m) + '%');
+    weatherOK = true;
+    var wxEl = document.getElementById('wx');
+    if (wxEl) wxEl.hidden = false;
+    refreshClimaDots();
+  })['catch'](function () {
+    // sin internet en la pantalla: ocultamos el clima y la cartelera sigue igual
+    weatherOK = false;
+    hideWx_();
+    refreshClimaDots();
+  });
+}
+function hideWx_() {
+  var wxEl = document.getElementById('wx');
+  if (wxEl) wxEl.hidden = true;
+}
 
 // controles
-document.addEventListener('keydown',e=>{
-  if(e.key==='ArrowRight') next();
-  else if(e.key==='ArrowLeft') prev();
-  else if(e.key===' '){ paused=!paused; e.preventDefault(); }
-  else if(e.key.toLowerCase()==='f'){ if(!document.fullscreenElement)document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowRight') next();else if (e.key === 'ArrowLeft') prev();else if (e.key === ' ') {
+    paused = !paused;
+    e.preventDefault();
+  } else if (e.key.toLowerCase() === 'f') {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();else document.exitFullscreen();
+  }
 });
 // mostrar el cursor solo al moverlo
-let curTimer;
-document.addEventListener('mousemove',()=>{
+var curTimer;
+document.addEventListener('mousemove', function () {
   document.body.classList.add('show-cursor');
   clearTimeout(curTimer);
-  curTimer=setTimeout(()=>document.body.classList.remove('show-cursor'),2500);
+  curTimer = setTimeout(function () {
+    return document.body.classList.remove('show-cursor');
+  }, 2500);
 });
 
 // ============ CONEXIÓN CON EL BACK OFFICE ============
-const DATA_URL='https://script.google.com/macros/s/AKfycbxAt5gQYspry28ntaEweGr0Wp4myCLObjB9N81Wc4c3OjGEujtUqreuxn57adss2UNPZg/exec';
-const PREVIEW=/[?&]preview=1/.test(location.search);
-
-function applyData(data){
-  if(data && data.updatedAt) delete data.updatedAt;   // campo volátil (cambia en cada consulta): sin esto, el poll de 20 s reiniciaba la cartelera a la slide 1
-  const str=JSON.stringify(data);
-  if(str===lastDataStr) return;            // sin cambios -> no re-dibuja
-  lastDataStr=str;
-  const cfg=(data&&data.config)||{};
-  WX.lat=parseFloat(cfg.clima_lat)|| -34.6131;
-  WX.lon=parseFloat(cfg.clima_lon)|| -58.3772;
-  const cityEl=document.querySelector('.wx-city'); if(cityEl) cityEl.textContent=cfg.clima_ciudad||'Buenos Aires';
-  SLIDES=makeSlides(data);
+var DATA_URL = 'https://script.google.com/macros/s/AKfycbxAt5gQYspry28ntaEweGr0Wp4myCLObjB9N81Wc4c3OjGEujtUqreuxn57adss2UNPZg/exec';
+var PREVIEW = /[?&]preview=1/.test(location.search);
+function applyData(data) {
+  if (data && data.updatedAt) delete data.updatedAt; // campo volátil (cambia en cada consulta): sin esto, el poll de 20 s reiniciaba la cartelera a la slide 1
+  var str = JSON.stringify(data);
+  if (str === lastDataStr) return; // sin cambios -> no re-dibuja
+  lastDataStr = str;
+  var cfg = data && data.config || {};
+  WX.lat = parseFloat(cfg.clima_lat) || -34.6131;
+  WX.lon = parseFloat(cfg.clima_lon) || -58.3772;
+  var cityEl = document.querySelector('.wx-city');
+  if (cityEl) cityEl.textContent = cfg.clima_ciudad || 'Buenos Aires';
+  SLIDES = makeSlides(data);
   render();
-  if(!started){ startEngine(); started=true; }
+  if (!started) {
+    startEngine();
+    started = true;
+  }
   fetchWeather();
 }
-function startEngine(){
-  tick(); setInterval(tick,1000);
-  setInterval(fetchWeather, 15*60*1000);
-  raf=requestAnimationFrame(loop);
+function startEngine() {
+  tick();
+  setInterval(tick, 1000);
+  setInterval(fetchWeather, 15 * 60 * 1000);
+  raf = requestAnimationFrame(loop);
 }
 // JSONP: lee el contenido del back office sin problemas de CORS desde GitHub Pages
-function fetchData(cb){
-  const fn='__cb'+Math.random().toString(36).slice(2);
-  const s=document.createElement('script');
-  let done=false;
-  const finish=d=>{ if(done)return; done=true; try{delete window[fn];}catch(e){} s.remove(); cb(d); };
-  window[fn]=finish;
-  s.onerror=()=>finish(null);
-  s.src=DATA_URL+'?action=data&callback='+fn+'&t='+Date.now();
+function fetchData(cb) {
+  var fn = '__cb' + Math.random().toString(36).slice(2);
+  var s = document.createElement('script');
+  var done = false;
+  var finish = function finish(d) {
+    if (done) return;
+    done = true;
+    try {
+      delete window[fn];
+    } catch (e) {}
+    s.remove();
+    cb(d);
+  };
+  window[fn] = finish;
+  s.onerror = function () {
+    return finish(null);
+  };
+  s.src = DATA_URL + '?action=data&callback=' + fn + '&t=' + Date.now();
   document.body.appendChild(s);
-  setTimeout(()=>finish(null), 8000);      // si no responde (offline / sin permisos) -> usa default
+  setTimeout(function () {
+    return finish(null);
+  }, 8000); // si no responde (offline / sin permisos) -> usa default
 }
-
-if(PREVIEW){
+if (PREVIEW) {
   // modo vista previa: el back office manda el contenido por postMessage al editar
   applyData(DEFAULT_DATA);
-  window.addEventListener('message',ev=>{
-    const m=ev.data;
-    if(m && m.type==='cartelera-data' && m.data){ lastDataStr=''; applyData(m.data); }
+  window.addEventListener('message', function (ev) {
+    var m = ev.data;
+    if (m && m.type === 'cartelera-data' && m.data) {
+      lastDataStr = '';
+      applyData(m.data);
+    }
   });
-}else{
+} else {
+  var checkVersion = function checkVersion() {
+    if (typeof fetch === 'undefined') return;
+    fetch('version.txt?t=' + Date.now(), {
+      cache: 'no-store'
+    }).then(function (r) {
+      return r.ok ? r.text() : null;
+    }).then(function (v) {
+      v = v ? v.trim() : '';
+      // El SSO de HP puede responder al fetch con su página HTML de login y status 200:
+      // solo un número es una versión válida; cualquier otra cosa se ignora (si no, la TV
+      // se recargaba en loop cada 90 s y cortaba el ciclo a mitad de la última slide).
+      if (!/^\d+$/.test(v) || v === VERSION) return;
+      // Si ya recargamos por esta misma versión hace poco y seguimos viendo la vieja
+      // (cache de Pages), esperamos a que expire en vez de recargar cada 90 s.
+      var prev = null;
+      try {
+        prev = JSON.parse(localStorage.getItem('cartelera_reload'));
+      } catch (e) {}
+      if (prev && prev.v === v && Date.now() - prev.t < 10 * 60 * 1000) return;
+      try {
+        localStorage.setItem('cartelera_reload', JSON.stringify({
+          v: v,
+          t: Date.now()
+        }));
+      } catch (e) {}
+      location.reload();
+    })['catch'](function () {});
+  };
   // modo TV: lee del back office; si no hay internet usa el contenido por defecto
-  fetchData(d=>applyData(d||DEFAULT_DATA));
-  setInterval(()=>fetchData(d=>{ if(d) applyData(d); }), 20*1000);   // consulta cambios cada 20 s
+  fetchData(function (d) {
+    return applyData(d || DEFAULT_DATA);
+  });
+  setInterval(function () {
+    return fetchData(function (d) {
+      if (d) applyData(d);
+    });
+  }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  const VERSION='16';
-  function checkVersion(){
-    if(typeof fetch==='undefined') return;
-    fetch('version.txt?t='+Date.now(),{cache:'no-store'})
-      .then(function(r){ return r.ok?r.text():null; })
-      .then(function(v){
-        v = v ? v.trim() : '';
-        // El SSO de HP puede responder al fetch con su página HTML de login y status 200:
-        // solo un número es una versión válida; cualquier otra cosa se ignora (si no, la TV
-        // se recargaba en loop cada 90 s y cortaba el ciclo a mitad de la última slide).
-        if(!/^\d+$/.test(v) || v===VERSION) return;
-        // Si ya recargamos por esta misma versión hace poco y seguimos viendo la vieja
-        // (cache de Pages), esperamos a que expire en vez de recargar cada 90 s.
-        var prev=null;
-        try{ prev=JSON.parse(localStorage.getItem('cartelera_reload')); }catch(e){}
-        if(prev && prev.v===v && Date.now()-prev.t < 10*60*1000) return;
-        try{ localStorage.setItem('cartelera_reload', JSON.stringify({v:v, t:Date.now()})); }catch(e){}
-        location.reload();
-      })
-      ['catch'](function(){});
-  }
-  setInterval(checkVersion, 90*1000);   // chequea versión cada 90 s
+  var VERSION = '17';
+  setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
 </body>
