@@ -144,7 +144,8 @@
   /* FOTO a pantalla completa */
   .foto{padding:0}
   .foto .foto-bg{position:absolute;top:0;right:0;bottom:0;left:0;background-color:#0c2a66;background-position:center;background-size:cover;background-repeat:no-repeat}
-  .foto:after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(0deg,rgba(4,12,32,.92) 0%,rgba(4,12,32,.05) 50%,rgba(4,12,32,.30) 100%)}
+  /* Eliminamos el overlay oscuro para que las fotos se vean más nítidas */
+  .foto:after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:transparent;pointer-events:none}
   .foto .foto-cap{position:absolute;left:64px;bottom:60px;z-index:2;max-width:70%}
   .foto .foto-t{font-size:56px;font-weight:700;line-height:1.05}
   .foto .foto-d{font-size:24px;color:#d7e0f5;margin-top:10px}
@@ -203,14 +204,93 @@
 
 <script>
 // Muestra en pantalla cualquier error de JS (clave para depurar en la TV, donde no hay consola).
-window.onerror = function (msg, src, line) {
+// Muestra / registra errores para depurar en la TV (donde no hay consola).
+// Guardamos en localStorage un histórico y mostramos información útil cuando sea posible.
+var ERROR_LOG_KEY = 'cartelera_js_errors';
+function pushErrorEntry(entry) {
   try {
-    var d = document.createElement('div');
-    d.style.cssText = 'position:fixed;left:12px;bottom:12px;max-width:90%;background:#b00020;color:#fff;padding:10px 14px;border-radius:8px;font:13px/1.4 monospace;z-index:9999;word-wrap:break-word';
-    d.textContent = 'Error JS: ' + msg + ' (linea ' + line + ')';
-    (document.body || document.documentElement).appendChild(d);
+    var list = JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]');
+    entry.t = Date.now();
+    list.push(entry);
+    if (list.length > 25) list = list.slice(list.length - 25);
+    localStorage.setItem(ERROR_LOG_KEY, JSON.stringify(list));
   } catch (e) {}
+}
+function formatTime(ts) {
+  try { return new Date(ts).toLocaleString(); } catch (e) { return String(ts); }
+}
+function showErrorOverlay(entry) {
+  try {
+    var o = document.getElementById('cartelera-errors');
+    if (!o) {
+      o = document.createElement('div');
+      o.id = 'cartelera-errors';
+      o.style.cssText = 'position:fixed;left:12px;bottom:12px;max-width:96%;max-height:40%;overflow:auto;background:rgba(176,0,32,0.95);color:#fff;padding:10px 14px;border-radius:8px;font:13px/1.4 monospace;z-index:99999;word-wrap:break-word';
+      document.body.appendChild(o);
+    }
+    var html = '<div style="margin-bottom:8px;font-weight:700">Últimos errores (presione F11 para salir de pantalla completa si no ve todo)</div>';
+    var list = JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]').slice().reverse();
+    html += '<ol style="padding-left:18px;margin:0">';
+    list.forEach(function(it){
+      html += '<li style="margin-bottom:6px"><b>'+ (it.type||'js') +'</b> @ '+ formatTime(it.t) + '<div style="margin-top:4px;color:#ffdcdc;">' + (it.msg?escapeHtml(it.msg):'') + (it.src?(' <small>src:'+escapeHtml(it.src)+'</small>'):'') + '</div>' + (it.stack?('<pre style="white-space:pre-wrap;color:#ffecec;margin:6px 0 0;padding:6px;background:rgba(0,0,0,0.15);border-radius:4px">'+escapeHtml(it.stack)+'</pre>'):'') + '</li>';
+    });
+    html += '</ol>';
+    o.innerHTML = html;
+  } catch (e) {}
+}
+function escapeHtml(s){
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+window.onerror = function (msg, src, line, col, errObj) {
+  try {
+    var text = (msg || '').toString();
+    // guard: si es un "Script error" sin información, no lo tratamos como fallo crítico
+    if (text.toLowerCase().indexOf('script error') !== -1 && line === 0) {
+      // Pero lo registramos como recurso si hay elemento que falló mediante listener de resource errors
+      pushErrorEntry({type:'script-error', msg:text, src:src || '', line:line || 0, col:col || 0});
+      return true;
+    }
+    var stack = (errObj && errObj.stack) ? errObj.stack : null;
+    pushErrorEntry({type:'runtime', msg: text, src: src || '', line: line || 0, col: col || 0, stack: stack});
+    showErrorOverlay({});
+  } catch (e) {}
+  return true;
 };
+
+// Captura errores de carga de recursos (scripts, css, imágenes) en modo captura
+window.addEventListener('error', function(ev){
+  try {
+    var t = ev && ev.target ? ev.target : ev.srcElement;
+    if (!t) return;
+    // Si es un ErrorEvent normal, ya lo maneja window.onerror
+    if (ev instanceof ErrorEvent) return;
+    var url = t.src || t.href || null;
+    if (url) {
+      pushErrorEntry({type:'resource', tag: t.tagName, url: url, outer: (t.outerHTML || '').slice(0,300)});
+      showErrorOverlay({});
+    }
+  } catch (e) {}
+}, true);
+
+// Promesas no capturadas
+window.addEventListener('unhandledrejection', function(ev){
+  try {
+    var reason = ev && ev.reason ? ev.reason : ev;
+    var msg = typeof reason === 'string' ? reason : (reason && reason.message) || String(reason);
+    var stack = reason && reason.stack ? reason.stack : null;
+    pushErrorEntry({type:'unhandledrejection', msg: msg, stack: stack});
+    showErrorOverlay({});
+  } catch (e) {}
+});
+
+// Modo debug forzado vía query string: ?debug=1
+var DEBUG_MODE = /[?&]debug=1(\b|$)/.test(location.search);
+if (DEBUG_MODE) {
+  // mostrar overlay aunque no haya errores registrados
+  showErrorOverlay({});
+}
 // Polyfills para el navegador integrado de TVs viejas (webOS): APIs que no existen en Chrome <51.
 if (window.NodeList && !NodeList.prototype.forEach) NodeList.prototype.forEach = Array.prototype.forEach;
 if (window.Element && !Element.prototype.remove) Element.prototype.remove = function () { if (this.parentNode) this.parentNode.removeChild(this); };
@@ -652,27 +732,62 @@ function fetchWeather() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
   }).then(function (j) {
-    var cur = j.current,
-      day = j.daily,
-      w = wmo(cur.weather_code);
-    var t = Math.round(cur.temperature_2m);
-    setTxt('wxTemp', t + '°');
-    setTxt('wxIc', w[0]);
-    setTxt('cIc', w[0]);
-    setTxt('cTemp', t + '°');
-    setTxt('cCond', w[1]);
-    setTxt('cMax', Math.round(day.temperature_2m_max[0]) + '°');
-    setTxt('cMin', Math.round(day.temperature_2m_min[0]) + '°');
-    setTxt('cWind', Math.round(cur.wind_speed_10m) + ' km/h');
-    setTxt('cHum', Math.round(cur.relative_humidity_2m) + '%');
-    weatherOK = true;
-    var wxEl = document.getElementById('wx');
-    if (wxEl) wxEl.hidden = false;
-    refreshClimaDots();
+    try {
+      var cur = j.current,
+        day = j.daily,
+        w = wmo(cur.weather_code);
+      var t = Math.round(cur.temperature_2m);
+      setTxt('wxTemp', t + '°');
+      setTxt('wxIc', w[0]);
+      setTxt('cIc', w[0]);
+      setTxt('cTemp', t + '°');
+      setTxt('cCond', w[1]);
+      setTxt('cMax', Math.round(day.temperature_2m_max[0]) + '°');
+      setTxt('cMin', Math.round(day.temperature_2m_min[0]) + '°');
+      setTxt('cWind', Math.round(cur.wind_speed_10m) + ' km/h');
+      setTxt('cHum', Math.round(cur.relative_humidity_2m) + '%');
+      weatherOK = true;
+      var wxEl = document.getElementById('wx');
+      if (wxEl) wxEl.hidden = false;
+      // guardar último resultado para fallback offline
+      try {
+        localStorage.setItem('cartelera_weather', JSON.stringify({t: Date.now(), j: j}));
+      } catch (e) {}
+      refreshClimaDots();
+    } catch (e) {
+      // en caso de respuesta inesperada, intentamos fallback
+      weatherOK = false;
+      hideWx_();
+      refreshClimaDots();
+    }
   })['catch'](function () {
-    // sin internet en la pantalla: ocultamos el clima y la cartelera sigue igual
-    weatherOK = false;
-    hideWx_();
+    // sin internet en la pantalla: intentamos usar el último valor guardado
+    var stored = null;
+    try {
+      stored = JSON.parse(localStorage.getItem('cartelera_weather'));
+    } catch (e) { stored = null; }
+    if (stored && stored.j && stored.j.current) {
+      var cur2 = stored.j.current,
+        day2 = stored.j.daily,
+        w2 = wmo(cur2.weather_code);
+      var t2 = Math.round(cur2.temperature_2m);
+      setTxt('wxTemp', t2 + '°');
+      setTxt('wxIc', w2[0]);
+      setTxt('cIc', w2[0]);
+      setTxt('cTemp', t2 + '°');
+      setTxt('cCond', w2[1] + ' (última)');
+      setTxt('cMax', Math.round(day2.temperature_2m_max[0]) + '°');
+      setTxt('cMin', Math.round(day2.temperature_2m_min[0]) + '°');
+      setTxt('cWind', Math.round(cur2.wind_speed_10m) + ' km/h');
+      setTxt('cHum', Math.round(cur2.relative_humidity_2m) + '%');
+      weatherOK = true;
+      var wxEl2 = document.getElementById('wx');
+      if (wxEl2) wxEl2.hidden = false;
+    } else {
+      // sin datos: mostramos marcador neutro
+      weatherOK = false;
+      hideWx_();
+    }
     refreshClimaDots();
   });
 }
