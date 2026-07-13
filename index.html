@@ -688,19 +688,32 @@ function fetchWeather() {
   if (!SLIDES.some(function (s) {
     return s.type === 'clima';
   })) return;
-  var url = "https://api.open-meteo.com/v1/forecast?latitude=" + WX.lat + "&longitude=" + WX.lon + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m" + "&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FBuenos_Aires";
-  httpGetText(url, function (text) {
+  // JSONP al back office (Google pide el clima y nos lo pasa): el navegador viejo de las TVs
+  // no puede conectarse directo a Open-Meteo por TLS, pero a Google (script.google.com) sí.
+  var fn = '__wx' + Math.random().toString(36).slice(2);
+  var s = document.createElement('script');
+  var done = false;
+  var finish = function finish(j) {
+    if (done) return;
+    done = true;
     try {
-      var j = JSON.parse(text);
-      if (!j || !j.current) throw new Error('sin datos');
+      delete window[fn];
+    } catch (e) {}
+    if (s.parentNode) s.parentNode.removeChild(s);
+    if (j && j.current) {
       applyWeatherData(j, false);
       try {
         localStorage.setItem('cartelera_weather', JSON.stringify({ t: Date.now(), j: j }));
       } catch (e) {}
-    } catch (e) {
+    } else {
       useStoredWeather();
     }
-  }, useStoredWeather);
+  };
+  window[fn] = finish;
+  s.onerror = function () { finish(null); };
+  s.src = DATA_URL + '?action=weather&callback=' + fn + '&_=' + Date.now();
+  document.body.appendChild(s);
+  setTimeout(function () { finish(null); }, 12000);
 }
 function hideWx_() {
   var wxEl = document.getElementById('wx');
@@ -825,7 +838,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  var VERSION = '23';
+  var VERSION = '24';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
