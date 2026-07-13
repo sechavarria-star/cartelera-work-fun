@@ -220,6 +220,8 @@ function formatTime(ts) {
   try { return new Date(ts).toLocaleString(); } catch (e) { return String(ts); }
 }
 function showErrorOverlay(entry) {
+  // No mostrar overlay salvo que se haya solicitado explícitamente con ?debug=1
+  if (typeof DEBUG_MODE === 'undefined' || !DEBUG_MODE) return;
   try {
     var o = document.getElementById('cartelera-errors');
     if (!o) {
@@ -232,7 +234,24 @@ function showErrorOverlay(entry) {
     var list = JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]').slice().reverse();
     html += '<ol style="padding-left:18px;margin:0">';
     list.forEach(function(it){
-      html += '<li style="margin-bottom:6px"><b>'+ (it.type||'js') +'</b> @ '+ formatTime(it.t) + '<div style="margin-top:4px;color:#ffdcdc;">' + (it.msg?escapeHtml(it.msg):'') + (it.src?(' <small>src:'+escapeHtml(it.src)+'</small>'):'') + '</div>' + (it.stack?('<pre style="white-space:pre-wrap;color:#ffecec;margin:6px 0 0;padding:6px;background:rgba(0,0,0,0.15);border-radius:4px">'+escapeHtml(it.stack)+'</pre>'):'') + '</li>';
+      html += '<li style="margin-bottom:8px">';
+      html += '<div style="font-weight:700;margin-bottom:4px">' + escapeHtml(it.type || 'js') + ' @ ' + formatTime(it.t) + '</div>';
+      // mostrar detalles según tipo
+      if (it.type === 'resource') {
+        html += '<div style="color:#ffdcdc;margin-bottom:4px">Recurso: ' + escapeHtml(it.url || it.outer || '') + '</div>';
+        if (it.outer) html += '<pre style="white-space:pre-wrap;color:#ffecec;margin:6px 0 0;padding:6px;background:rgba(0,0,0,0.15);border-radius:4px">' + escapeHtml(it.outer) + '</pre>';
+      } else if (it.type === 'script-error') {
+        html += '<div style="color:#ffdcdc;margin-bottom:4px">Script error (origen): ' + escapeHtml(it.src || it.msg || '') + '</div>';
+      } else if (it.type === 'unhandledrejection') {
+        html += '<div style="color:#ffdcdc;margin-bottom:4px">' + escapeHtml(it.msg || '') + '</div>';
+        if (it.stack) html += '<pre style="white-space:pre-wrap;color:#ffecec;margin:6px 0 0;padding:6px;background:rgba(0,0,0,0.15);border-radius:4px">' + escapeHtml(it.stack) + '</pre>';
+      } else {
+        // runtime y otros
+        if (it.msg) html += '<div style="color:#ffdcdc;margin-bottom:4px">' + escapeHtml(it.msg) + '</div>';
+        if (it.src) html += '<div style="color:#ffdcdc;margin-bottom:4px">src: ' + escapeHtml(it.src) + ' (line: ' + (it.line || 0) + ')</div>';
+        if (it.stack) html += '<pre style="white-space:pre-wrap;color:#ffecec;margin:6px 0 0;padding:6px;background:rgba(0,0,0,0.15);border-radius:4px">' + escapeHtml(it.stack) + '</pre>';
+      }
+      html += '</li>';
     });
     html += '</ol>';
     o.innerHTML = html;
@@ -242,6 +261,20 @@ function escapeHtml(s){
   if(!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// Limpia overlays antiguos que puedan haber quedado por versiones cacheadas
+document.addEventListener('DOMContentLoaded', function(){
+  try {
+    var nodes = document.querySelectorAll('div');
+    nodes.forEach(function(n){
+      try {
+        if (n && n.textContent && n.textContent.indexOf('Error JS:') !== -1) {
+          n.parentNode && n.parentNode.removeChild(n);
+        }
+      } catch (e) {}
+    });
+  } catch (e) {}
+});
 
 window.onerror = function (msg, src, line, col, errObj) {
   try {
