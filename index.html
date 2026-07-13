@@ -207,6 +207,38 @@
 // Muestra / registra errores para depurar en la TV (donde no hay consola).
 // Guardamos en localStorage un histórico y mostramos información útil cuando sea posible.
 var ERROR_LOG_KEY = 'cartelera_js_errors';
+// Modo debug forzado vía query string: ?debug=1
+var DEBUG_MODE = /[?&]debug=1(\b|$)/.test(location.search);
+// Elimina cualquier overlay antiguo que pudiera haber quedado antes de cargar este script,
+// a menos que estemos en modo debug (entonces lo dejamos para inspección).
+try {
+  var _old = document.getElementById('cartelera-errors');
+  if (_old && !DEBUG_MODE) _old.parentNode && _old.parentNode.removeChild(_old);
+} catch (e) {}
+// Función de limpieza robusta: elimina overlays o mensajes residuales que contengan texto de error.
+function removeErrorOverlays() {
+  try {
+    // id específico
+    var el = document.getElementById('cartelera-errors');
+    if (el) el.parentNode && el.parentNode.removeChild(el);
+  } catch (e) {}
+  try {
+    // buscar nodos con textos comunes de versiones anteriores
+    var suspects = document.querySelectorAll('div,span');
+    suspects.forEach(function(n){
+      try {
+        var txt = (n.textContent || '').toString().toLowerCase();
+        if (txt.indexOf('error js:') !== -1 || txt.indexOf('últimos errores') !== -1 || txt.indexOf('script error') !== -1) {
+          n.parentNode && n.parentNode.removeChild(n);
+        }
+      } catch (e) {}
+    });
+  } catch (e) {}
+}
+// Ejecutar inmediato y durante unos segundos para limpiar overlays cacheados o inyectados antes de este script.
+try { removeErrorOverlays(); } catch (e) {}
+var __cleanupTimer = setInterval(function(){ try{ removeErrorOverlays(); }catch(e){} }, 1000);
+setTimeout(function(){ try{ clearInterval(__cleanupTimer); }catch(e){} }, 7000);
 function pushErrorEntry(entry) {
   try {
     var list = JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]');
