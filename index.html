@@ -634,81 +634,73 @@ function refreshClimaDots() {
     if (s.type === 'clima') dotNodes[i].style.display = weatherOK ? '' : 'none';
   });
 }
+// GET por XMLHttpRequest (funciona en el navegador viejo de las TVs, que NO tiene fetch).
+function httpGetText(url, onOk, onErr) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+      if (xhr.status >= 200 && xhr.status < 300) onOk(xhr.responseText);else if (onErr) onErr();
+    };
+    xhr.onerror = function () { if (onErr) onErr(); };
+    if ('timeout' in xhr) {
+      xhr.timeout = 12000;
+      xhr.ontimeout = function () { if (onErr) onErr(); };
+    }
+    xhr.send();
+  } catch (e) { if (onErr) onErr(); }
+}
+// Pinta el clima (online o desde el último guardado); isStale marca datos viejos.
+function applyWeatherData(j, isStale) {
+  var cur = j.current,
+    day = j.daily,
+    w = wmo(cur.weather_code);
+  var t = Math.round(cur.temperature_2m);
+  setTxt('wxTemp', t + '°');
+  setTxt('wxIc', w[0]);
+  setTxt('cIc', w[0]);
+  setTxt('cTemp', t + '°');
+  setTxt('cCond', w[1] + (isStale ? ' (última)' : ''));
+  setTxt('cMax', Math.round(day.temperature_2m_max[0]) + '°');
+  setTxt('cMin', Math.round(day.temperature_2m_min[0]) + '°');
+  setTxt('cWind', Math.round(cur.wind_speed_10m) + ' km/h');
+  setTxt('cHum', Math.round(cur.relative_humidity_2m) + '%');
+  weatherOK = true;
+  var wxEl = document.getElementById('wx');
+  if (wxEl) wxEl.hidden = false;
+  refreshClimaDots();
+}
+// Fallback: usa el último clima guardado; si no hay, oculta la sección.
+function useStoredWeather() {
+  var stored = null;
+  try {
+    stored = JSON.parse(localStorage.getItem('cartelera_weather'));
+  } catch (e) { stored = null; }
+  if (stored && stored.j && stored.j.current) applyWeatherData(stored.j, true);else {
+    weatherOK = false;
+    hideWx_();
+    refreshClimaDots();
+  }
+}
 function fetchWeather() {
-  // si la slide de clima no existe (o el navegador viejo no tiene fetch), no pedimos nada
+  // si la slide de clima no existe, no pedimos nada
   if (!SLIDES.some(function (s) {
     return s.type === 'clima';
   })) return;
-  if (typeof fetch === 'undefined') {
-    weatherOK = false;
-    hideWx_();
-    return;
-  }
   var url = "https://api.open-meteo.com/v1/forecast?latitude=" + WX.lat + "&longitude=" + WX.lon + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m" + "&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FBuenos_Aires";
-  fetch(url, {
-    cache: 'no-store'
-  }).then(function (r) {
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  }).then(function (j) {
+  httpGetText(url, function (text) {
     try {
-      var cur = j.current,
-        day = j.daily,
-        w = wmo(cur.weather_code);
-      var t = Math.round(cur.temperature_2m);
-      setTxt('wxTemp', t + '°');
-      setTxt('wxIc', w[0]);
-      setTxt('cIc', w[0]);
-      setTxt('cTemp', t + '°');
-      setTxt('cCond', w[1]);
-      setTxt('cMax', Math.round(day.temperature_2m_max[0]) + '°');
-      setTxt('cMin', Math.round(day.temperature_2m_min[0]) + '°');
-      setTxt('cWind', Math.round(cur.wind_speed_10m) + ' km/h');
-      setTxt('cHum', Math.round(cur.relative_humidity_2m) + '%');
-      weatherOK = true;
-      var wxEl = document.getElementById('wx');
-      if (wxEl) wxEl.hidden = false;
-      // guardar último resultado para fallback offline
+      var j = JSON.parse(text);
+      if (!j || !j.current) throw new Error('sin datos');
+      applyWeatherData(j, false);
       try {
-        localStorage.setItem('cartelera_weather', JSON.stringify({t: Date.now(), j: j}));
+        localStorage.setItem('cartelera_weather', JSON.stringify({ t: Date.now(), j: j }));
       } catch (e) {}
-      refreshClimaDots();
     } catch (e) {
-      // en caso de respuesta inesperada, intentamos fallback
-      weatherOK = false;
-      hideWx_();
-      refreshClimaDots();
+      useStoredWeather();
     }
-  })['catch'](function () {
-    // sin internet en la pantalla: intentamos usar el último valor guardado
-    var stored = null;
-    try {
-      stored = JSON.parse(localStorage.getItem('cartelera_weather'));
-    } catch (e) { stored = null; }
-    if (stored && stored.j && stored.j.current) {
-      var cur2 = stored.j.current,
-        day2 = stored.j.daily,
-        w2 = wmo(cur2.weather_code);
-      var t2 = Math.round(cur2.temperature_2m);
-      setTxt('wxTemp', t2 + '°');
-      setTxt('wxIc', w2[0]);
-      setTxt('cIc', w2[0]);
-      setTxt('cTemp', t2 + '°');
-      setTxt('cCond', w2[1] + ' (última)');
-      setTxt('cMax', Math.round(day2.temperature_2m_max[0]) + '°');
-      setTxt('cMin', Math.round(day2.temperature_2m_min[0]) + '°');
-      setTxt('cWind', Math.round(cur2.wind_speed_10m) + ' km/h');
-      setTxt('cHum', Math.round(cur2.relative_humidity_2m) + '%');
-      weatherOK = true;
-      var wxEl2 = document.getElementById('wx');
-      if (wxEl2) wxEl2.hidden = false;
-    } else {
-      // sin datos: mostramos marcador neutro
-      weatherOK = false;
-      hideWx_();
-    }
-    refreshClimaDots();
-  });
+  }, useStoredWeather);
 }
 function hideWx_() {
   var wxEl = document.getElementById('wx');
@@ -798,14 +790,11 @@ if (PREVIEW) {
   });
 } else {
   var checkVersion = function checkVersion() {
-    if (typeof fetch === 'undefined') return;
-    fetch('version.txt?t=' + Date.now(), {
-      cache: 'no-store'
-    }).then(function (r) {
-      return r.ok ? r.text() : null;
-    }).then(function (v) {
+    // XHR (no fetch): el navegador de las TVs viejas no tiene fetch, y sin esto nunca se
+    // auto-recargaba al publicar una versión nueva (había que recargar a mano).
+    httpGetText('version.txt?t=' + Date.now(), function (v) {
       v = v ? v.trim() : '';
-      // El SSO de HP puede responder al fetch con su página HTML de login y status 200:
+      // El SSO de HP puede responder con su página HTML de login y status 200:
       // solo un número es una versión válida; cualquier otra cosa se ignora (si no, la TV
       // se recargaba en loop cada 90 s y cortaba el ciclo a mitad de la última slide).
       if (!/^\d+$/.test(v) || v === VERSION) return;
@@ -823,7 +812,7 @@ if (PREVIEW) {
         }));
       } catch (e) {}
       location.reload();
-    })['catch'](function () {});
+    });
   };
   // modo TV: lee del back office; si no hay internet usa el contenido por defecto
   fetchData(function (d) {
@@ -836,7 +825,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  var VERSION = '22';
+  var VERSION = '23';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
