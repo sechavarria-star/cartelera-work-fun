@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <!-- Círculo azul de fondo -->
+  <circle cx="50" cy="50" r="48" fill="#0073E6"/>
+
+  <!-- Letra "h" -->
+  <path d="M 25 30 L 25 70 M 25 50 Q 25 35 40 35 Q 50 35 50 50 L 50 70" 
+		stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Letra "p" -->
+  <path d="M 60 30 L 60 70 M 60 50 Q 60 35 75 35 Q 85 35 85 48 Q 85 60 75 60 L 60 60" 
+		stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
