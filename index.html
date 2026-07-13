@@ -216,8 +216,32 @@
 <div class="help">Flechas ← → cambian de slide · barra espaciadora pausa · F11 pantalla completa</div>
 
 <script>
-// Eliminado: logging en pantalla (overlay) y registro para producción.
-// Si necesitas habilitar depuración en la TV, usa la versión con ?debug=1 localmente.
+// LIMPIEZA INMEDIATA: eliminar cualquier overlay de errores que esté visible en pantalla (cacheado o inyectado)
+try {
+  var removeOverlays = function() {
+    var nodes = document.querySelectorAll('div, span');
+    for (var i = 0; i < nodes.length; i++) {
+      try {
+        var n = nodes[i];
+        var txt = (n.textContent || '').toLowerCase();
+        var style = (n.getAttribute('style') || '').toLowerCase();
+        // Buscar texto del overlay antiguo o estilos rojo/fixed típicos
+        if (txt.indexOf('últimos errores') !== -1 || 
+            (txt.indexOf('error') !== -1 && style.indexOf('rgba(176,0,32') !== -1) ||
+            txt.indexOf('presione f11') !== -1 ||
+            (style.indexOf('fixed') !== -1 && style.indexOf('bottom') !== -1 && style.indexOf('left') !== -1 && style.indexOf('176,0,32') !== -1)) {
+          if (n.parentNode) n.parentNode.removeChild(n);
+        }
+      } catch (e) {}
+    }
+  };
+  // Ejecutar inmediatamente
+  removeOverlays();
+  // Repetir cada 200ms durante 10 segundos para capturar overlays inyectados
+  var _timer = setInterval(removeOverlays, 200);
+  setTimeout(function() { clearInterval(_timer); }, 10000);
+} catch (e) {}
+
 // Polyfills para el navegador integrado de TVs viejas (webOS): APIs que no existen en Chrome <51.
 if (window.NodeList && !NodeList.prototype.forEach) NodeList.prototype.forEach = Array.prototype.forEach;
 if (window.Element && !Element.prototype.remove) Element.prototype.remove = function () { if (this.parentNode) this.parentNode.removeChild(this); };
