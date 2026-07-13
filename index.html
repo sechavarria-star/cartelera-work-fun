@@ -162,6 +162,8 @@
   .help{position:fixed;left:56px;bottom:34px;font-size:13px;color:rgba(255,255,255,.4);opacity:0;-webkit-transition:opacity .3s;transition:opacity .3s}
   body.show-cursor{cursor:default}
   body.show-cursor .help{opacity:1}
+  /* PRODUCCIÓN: ocultar cualquier overlay de errores que pudiera quedar */
+  #cartelera-errors, #cartelera-errors *{display:none !important;visibility:hidden !important;pointer-events:none !important}
 </style>
 </head>
 <body>
