@@ -128,7 +128,7 @@
   /* CUMPLEAÑOS */
   .cumples{margin-top:10px;overflow:hidden;text-align:center}
   .cu-track{display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;-webkit-flex-wrap:wrap;flex-wrap:wrap}
-  .cu-track.scroll{-webkit-flex-wrap:nowrap;flex-wrap:nowrap;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-animation:cuscroll 30s linear infinite;animation:cuscroll 30s linear infinite}
+  .cu-track.scroll{-webkit-flex-wrap:nowrap;flex-wrap:nowrap;-webkit-justify-content:flex-start;justify-content:flex-start}
   @-webkit-keyframes cuscroll{from{-webkit-transform:translateX(0)}to{-webkit-transform:translateX(-50%)}}
   @keyframes cuscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   .cu{-webkit-flex:0 0 auto;flex:0 0 auto;width:248px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:28px 22px;margin:0 13px;text-align:center}
@@ -389,11 +389,9 @@ function buildCumples(s){
     return `<div class="cu">${photo}<div class="cu-name">${i.name||''}</div><div class="cu-when">${fecha}</div></div>`;
   };
   const cards=list.map(card).join('');
-  const carousel=list.length>4;   // si hay muchos, carrusel que se desplaza solo
-  // la vuelta completa del carrusel entra dentro del tiempo de la slide (2 s de margen, mínimo 8 s)
-  const dur=Math.max(8, (parseFloat(s.secs)||list.length*3+4)-2);
+  const carousel=list.length>4;   // si hay muchos, carrusel; lo desplaza el motor en sincronía con la barra de tiempo
   const track=carousel
-    ? `<div class="cu-track scroll" style="-webkit-animation-duration:${dur}s;animation-duration:${dur}s">${cards}${cards}</div>`
+    ? `<div class="cu-track scroll">${cards}</div>`
     : `<div class="cu-track center">${cards}</div>`;
   return `<div class="slide">
     <div class="eyebrow"><span class="dot"></span>Cumpleaños del mes</div>
@@ -425,20 +423,20 @@ function render(){
   dotNodes=Array.prototype.slice.call(dotsEl.children);
   idx=0; t0=performance.now();
   if(slideNodes.length){ slideNodes[0].classList.add('active'); dotNodes[0].classList.add('on'); }
-  syncCarousel();
   refreshClimaDots();
 }
-// Reinicia el carrusel de cumpleaños cada vez que su slide entra en pantalla: la pasada
-// arranca SIEMPRE por el primer cumpleañero y la vuelta completa termina junto con la slide.
-// (Las slides se ocultan con opacity, así que sin esto la animación corre de fondo y se ve empezada.)
-function syncCarousel(){
+// Desplaza el carrusel de cumpleaños en sincronía EXACTA con la barra de tiempo de la slide:
+// arranca en el primer cumpleañero al entrar y termina anclado en los últimos un poco antes
+// del cambio de slide (así la última persona siempre se ve, y no hay "vuelta a empezar").
+function driveCumples(p){
   var s=SLIDES[idx]; if(!s || s.type!=='cumples') return;
   var tr=slideNodes[idx].querySelector('.cu-track.scroll'); if(!tr) return;
-  var dur=Math.max(8,(parseFloat(s.secs)||30)-2)+'s';
-  tr.style.webkitAnimation='none'; tr.style.animation='none';
-  void tr.offsetWidth;                     // fuerza reflow: la animación vuelve a cero
-  tr.style.webkitAnimation=''; tr.style.animation='';
-  tr.style.webkitAnimationDuration=dur; tr.style.animationDuration=dur;
+  var travel=tr.scrollWidth - tr.parentNode.clientWidth;   // cuánto hay que recorrer para llegar al final
+  if(travel<=0) return;
+  var q=Math.min(1, p/0.94);                               // completa el recorrido al 94% del tiempo y ahí se queda
+  var x=-Math.round(travel*q);
+  tr.style.webkitTransform='translateX('+x+'px)';
+  tr.style.transform='translateX('+x+'px)';
 }
 // ¿se puede mostrar esta slide? (el clima se saltea si no hay datos / no hay internet)
 function visible(i){ return !(SLIDES[i].type==='clima' && !weatherOK); }
@@ -451,7 +449,6 @@ function show(i, dir){
   idx=n;
   slideNodes[idx].classList.add('active');
   dotNodes[idx].classList.add('on');
-  syncCarousel();
   t0=performance.now();
 }
 function next(){ show(idx+1, 1); }
@@ -462,6 +459,7 @@ function loop(now){
   if(!paused){
     const p=Math.min(1,(now-t0)/dur);
     barEl.style.width=(p*100)+'%';
+    driveCumples(p);
     if(p>=1) next();
   }
   updateCountdowns();
