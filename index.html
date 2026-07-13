@@ -209,6 +209,8 @@
 var ERROR_LOG_KEY = 'cartelera_js_errors';
 // Modo debug forzado vía query string: ?debug=1
 var DEBUG_MODE = /[?&]debug=1(\b|$)/.test(location.search);
+// Modo silencioso: cuando es true no se muestran ni registran errores en pantalla
+var SILENT_MODE = true;
 // Elimina cualquier overlay antiguo que pudiera haber quedado antes de cargar este script,
 // a menos que estemos en modo debug (entonces lo dejamos para inspección).
 try {
@@ -240,6 +242,7 @@ try { removeErrorOverlays(); } catch (e) {}
 var __cleanupTimer = setInterval(function(){ try{ removeErrorOverlays(); }catch(e){} }, 1000);
 setTimeout(function(){ try{ clearInterval(__cleanupTimer); }catch(e){} }, 7000);
 function pushErrorEntry(entry) {
+  if (SILENT_MODE) return;
   try {
     var list = JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]');
     entry.t = Date.now();
@@ -254,6 +257,8 @@ function formatTime(ts) {
 function showErrorOverlay(entry) {
   // No mostrar overlay salvo que se haya solicitado explícitamente con ?debug=1
   if (typeof DEBUG_MODE === 'undefined' || !DEBUG_MODE) return;
+  // Si estamos en modo silencioso, no hacemos nada
+  if (SILENT_MODE) return;
   try {
     var o = document.getElementById('cartelera-errors');
     if (!o) {
