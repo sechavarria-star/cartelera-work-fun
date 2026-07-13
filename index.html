@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <title>Cartelera · Work &amp; Fun '26</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -165,7 +168,7 @@
   <div class="stripe"></div>
 
   <header class="topbar">
-    <img class="brand-logo" src="assets/hp-roundel.png" alt="HP" onerror="if(this.src.indexOf('hp-roundel')>-1)this.src='assets/hp-logo.png';else this.style.display='none'">
+    <img class="brand-logo" src="assets/hp-roundel.png?v=20" alt="HP" onerror="if(this.src.indexOf('hp-roundel')>-1)this.src='assets/hp-logo.png?v=20';else this.style.display='none'">
     <div class="brandtxt">
       <div class="team">Work <span class="amp">&amp;</span> Fun '26</div>
       <div class="sub">HP Argentina</div>
@@ -368,6 +371,15 @@ var slidesEl = document.getElementById('slides');
 var dotsEl = document.getElementById('dots');
 var barEl = document.getElementById('bar');
 var DEFAULT_SECS = 10;
+var ASSET_VER = '20';
+function normalizeAsset(u) {
+  if (!u) return u;
+  try {
+    return u.indexOf('?') === -1 ? u + '?v=' + ASSET_VER : u + '&v=' + ASSET_VER;
+  } catch (e) {
+    return u;
+  }
+}
 function el(html) {
   var t = document.createElement('template');
   t.innerHTML = html.trim();
@@ -431,7 +443,7 @@ function buildCumples(s) {
     var ini = (i.name || '').trim().split(/\s+/).map(function (w) {
       return w[0] || '';
     }).slice(0, 2).join('').toUpperCase();
-    var photo = i.foto ? "<div class=\"cu-photo\" style=\"background-image:url('".concat(i.foto, "')\"></div>") : "<div class=\"cu-photo cu-ini\">".concat(ini || '🎂', "</div>");
+    var photo = i.foto ? "<div class=\"cu-photo\" style=\"background-image:url('".concat(normalizeAsset(i.foto), "')\"></div>") : "<div class=\"cu-photo cu-ini\">".concat(ini || '🎂', "</div>");
     var fecha = "".concat(day, " de ").concat(monthName) + (i.dia ? " \xB7 ".concat(i.dia) : '');
     return "<div class=\"cu\">".concat(photo, "<div class=\"cu-name\">").concat(i.name || '', "</div><div class=\"cu-when\">").concat(fecha, "</div></div>");
   };
@@ -441,7 +453,7 @@ function buildCumples(s) {
   return "<div class=\"slide\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>Cumplea\xF1os del mes</div>\n    <h1>\uD83C\uDF82 ".concat(cap(monthName), "</h1>\n    <div class=\"cumples\">").concat(track, "</div>\n  </div>");
 }
 function buildFoto(s) {
-  return "<div class=\"slide foto\">\n    <div class=\"foto-bg\" style=\"background-image:url('".concat(s.src || '', "')\"></div>\n    <div class=\"foto-cap\"><div class=\"foto-t\">").concat(s.title || '', "</div><div class=\"foto-d\">").concat(s.caption || '', "</div></div>\n  </div>");
+  return "<div class=\"slide foto\">\n    <div class=\"foto-bg\" style=\"background-image:url('".concat(normalizeAsset(s.src || ''), "')\"></div>\n    <div class=\"foto-cap\"><div class=\"foto-t\">").concat(s.title || '', "</div><div class=\"foto-d\">").concat(s.caption || '', "</div></div>\n  </div>");
 }
 var BUILDERS = {
   cover: buildCover,
