@@ -1,2 +1,9 @@
+﻿/.vs/
+*.user
+*.suo
+bin/
+obj/
+/.vscode/
+*.log
+Thumbs.db
 .DS_Store
-backoffice/
