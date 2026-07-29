@@ -161,14 +161,23 @@
   .encu-qr .cta{line-height:1.2;font-size:17px;font-weight:700;color:#06122c;text-align:center;
     letter-spacing:1px;text-transform:uppercase;padding:14px 4px 4px}
 
-  /* FOTO a pantalla completa */
-  .foto{padding:0}
-  .foto .foto-bg{position:absolute;top:0;right:0;bottom:0;left:0;background-color:#0c2a66;background-position:center;background-size:cover;background-repeat:no-repeat}
-  /* Eliminamos el overlay oscuro para que las fotos se vean más nítidas */
-  .foto:after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:transparent;pointer-events:none}
-  .foto .foto-cap{position:absolute;left:64px;bottom:60px;z-index:2;max-width:70%}
-  .foto .foto-t{font-size:56px;font-weight:700;line-height:1.05}
-  .foto .foto-d{font-size:24px;color:#d7e0f5;margin-top:10px}
+  /* FOTO: imagen arriba, título en una franja sólida abajo.
+     Antes el título iba absoluto ENCIMA de la foto y tapaba a la gente. Ahora la foto y
+     la franja son dos hijos del flex en columna, así que no pueden superponerse nunca.
+     'contain' además garantiza que la foto no se recorte (importante en fotos grupales). */
+  .foto{padding:0;-webkit-box-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start}
+  .foto .foto-bg{
+    position:relative;
+    -webkit-box-flex:1;-webkit-flex:1 1 auto;flex:1 1 auto;min-height:0;
+    background-color:#06122c;background-position:center;background-size:contain;background-repeat:no-repeat;
+  }
+  .foto .foto-cap{
+    -webkit-flex:0 0 auto;flex:0 0 auto;
+    background:#0a1b3f;border-top:4px solid #024AD8;
+    padding:20px 64px 24px;
+  }
+  .foto .foto-t{font-size:46px;font-weight:700;line-height:1.08}
+  .foto .foto-d{font-size:22px;color:#aab8d6;margin-top:8px}
 
   /* PIE / PROGRESO */
   .footer{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-flex:0 0 auto;flex:0 0 auto;padding:14px 56px 22px}
@@ -495,7 +504,20 @@ function buildCumples(s) {
   return "<div class=\"slide\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>Cumplea\xF1os del mes</div>\n    <h1>\uD83C\uDF82 ".concat(cap(monthName), "</h1>\n    <div class=\"cumples\">").concat(track, "</div>\n  </div>");
 }
 function buildFoto(s) {
-  return "<div class=\"slide foto\">\n    <div class=\"foto-bg\" style=\"background-image:url('".concat(normalizeAsset(s.src || ''), "')\"></div>\n    <div class=\"foto-cap\"><div class=\"foto-t\">").concat(s.title || '', "</div><div class=\"foto-d\">").concat(s.caption || '', "</div></div>\n  </div>");
+  var t = s.title || '';
+  var c = s.caption || '';
+  // La franja se dibuja SOLO si hay texto: una foto sin título usa toda la pantalla.
+  var cap = '';
+  if (t || c) {
+    cap = '<div class="foto-cap">' +
+      (t ? '<div class="foto-t">' + t + '</div>' : '') +
+      (c ? '<div class="foto-d">' + c + '</div>' : '') +
+      '</div>';
+  }
+  return '<div class="slide foto">' +
+    '<div class="foto-bg" style="background-image:url(\'' + normalizeAsset(s.src || '') + '\')"></div>' +
+    cap +
+    '</div>';
 }
 // ES5 a mano (sin template literals ni arrow functions): corre en el navegador viejo de la TV.
 function buildEncuesta(s) {
@@ -902,7 +924,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  var VERSION = '26';
+  var VERSION = '27';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
