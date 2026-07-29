@@ -166,10 +166,23 @@
      la franja son dos hijos del flex en columna, así que no pueden superponerse nunca.
      'contain' además garantiza que la foto no se recorte (importante en fotos grupales). */
   .foto{padding:0;-webkit-box-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start}
-  .foto .foto-bg{
-    position:relative;
+  /* El area de la foto: dos capas superpuestas. Abajo la misma imagen ampliada y
+     desenfocada, que rellena las barras laterales; arriba la foto entera sin recortar. */
+  .foto .foto-area{
+    position:relative;overflow:hidden;
     -webkit-box-flex:1;-webkit-flex:1 1 auto;flex:1 1 auto;min-height:0;
-    background-color:#06122c;background-position:center;background-size:contain;background-repeat:no-repeat;
+    background-color:#06122c;
+  }
+  .foto .foto-blur{
+    position:absolute;top:0;right:0;bottom:0;left:0;
+    background-position:center;background-size:cover;background-repeat:no-repeat;
+    -webkit-filter:blur(34px);filter:blur(34px);
+    -webkit-transform:scale(1.12);transform:scale(1.12);
+    opacity:.5;
+  }
+  .foto .foto-bg{
+    position:absolute;top:0;right:0;bottom:0;left:0;
+    background-position:center;background-size:contain;background-repeat:no-repeat;
   }
   .foto .foto-cap{
     -webkit-flex:0 0 auto;flex:0 0 auto;
@@ -503,9 +516,18 @@ function buildCumples(s) {
   var track = carousel ? "<div class=\"cu-track scroll\">".concat(cards, "</div>") : "<div class=\"cu-track center\">".concat(cards, "</div>");
   return "<div class=\"slide\">\n    <div class=\"eyebrow\"><span class=\"dot\"></span>Cumplea\xF1os del mes</div>\n    <h1>\uD83C\uDF82 ".concat(cap(monthName), "</h1>\n    <div class=\"cumples\">").concat(track, "</div>\n  </div>");
 }
+// ¿Soporta el navegador desenfocar por CSS? El de las TVs viejas puede no soportarlo, y sin
+// esto el relleno se veria como una copia ampliada y NITIDA de la foto, o sea un error.
+// Si no lo soporta, el area queda con el fondo solido (como antes).
+var BLUR_OK = function () {
+  var st = document.createElement('div').style;
+  st.cssText = '-webkit-filter:blur(2px);filter:blur(2px)';
+  return !!(st.webkitFilter || st.filter);
+}();
 function buildFoto(s) {
   var t = s.title || '';
   var c = s.caption || '';
+  var url = normalizeAsset(s.src || '');
   // La franja se dibuja SOLO si hay texto: una foto sin título usa toda la pantalla.
   var cap = '';
   if (t || c) {
@@ -514,8 +536,12 @@ function buildFoto(s) {
       (c ? '<div class="foto-d">' + c + '</div>' : '') +
       '</div>';
   }
+  var blur = BLUR_OK ? '<div class="foto-blur" style="background-image:url(\'' + url + '\')"></div>' : '';
   return '<div class="slide foto">' +
-    '<div class="foto-bg" style="background-image:url(\'' + normalizeAsset(s.src || '') + '\')"></div>' +
+    '<div class="foto-area">' +
+      blur +
+      '<div class="foto-bg" style="background-image:url(\'' + url + '\')"></div>' +
+    '</div>' +
     cap +
     '</div>';
 }
@@ -924,7 +950,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  var VERSION = '27';
+  var VERSION = '28';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
