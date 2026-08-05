@@ -161,6 +161,21 @@
   .encu-qr .cta{line-height:1.2;font-size:17px;font-weight:700;color:#06122c;text-align:center;
     letter-spacing:1px;text-transform:uppercase;padding:14px 4px 4px}
 
+  /* VOTACIÓN: QR a la derecha y el resultado en vivo a la izquierda.
+     Reusa la tarjeta blanca .encu-qr de la slide de encuesta. */
+  .vota .vota-wrap{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;width:100%}
+  .vota .vota-txt{-webkit-box-flex:1;-webkit-flex:1 1 auto;flex:1 1 auto;padding-right:64px;min-width:0}
+  .vota .vota-txt h1{font-size:52px;margin-bottom:36px}
+  .vota .encu-qr img{width:340px;height:340px}
+  .vbar{margin-bottom:26px}
+  .vbar .vtop{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;
+    font-size:30px;font-weight:700;margin-bottom:10px}
+  .vbar .vtrack{height:26px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden}
+  .vbar .vfill{height:100%;border-radius:999px;-webkit-transition:width .8s ease;transition:width .8s ease}
+  .vbar-si .vfill{background:#1D9E75}
+  .vbar-no .vfill{background:#FF5050}
+  .vtotal{font-size:20px;color:#aab8d6;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+
   /* FOTO: imagen arriba, título en una franja sólida abajo.
      Antes el título iba absoluto ENCIMA de la foto y tapaba a la gente. Ahora la foto y
      la franja son dos hijos del flex en columna, así que no pueden superponerse nunca.
@@ -427,6 +442,15 @@ function makeSlides(data) {
     }],
     secs: secsOf("encuesta", 14)
   });
+  // Votación Sí/No: el QR abre ?action=votacion y el conteo vuelve por el mismo poll de datos.
+  if (on("pub_votacion")) slides.push({
+    type: "votacion",
+    eyebrow: "Votación · escaneá y votá",
+    title: cfg.votacion_pregunta || "¿Estás para meterle onda a Halloween?",
+    qr: "assets/qr-votacion.svg",
+    cta: "Votá acá",
+    secs: secsOf("votacion", 14)
+  });
   return slides;
 }
 
@@ -565,6 +589,55 @@ function buildEncuesta(s) {
     '</div>' +
   '</div>';
 }
+// Conteo de la votación. Lo manda el back office en cada poll (solo totales, sin datos de nadie).
+var VOTOS = { si: 0, no: 0, total: 0 };
+function pctSi() {
+  return VOTOS.total ? Math.round((VOTOS.si || 0) * 100 / VOTOS.total) : 0;
+}
+function textoTotal() {
+  var t = VOTOS.total || 0;
+  return t === 1 ? '1 voto' : t + ' votos';
+}
+function buildVotacion(s) {
+  var pSi = pctSi();
+  var pNo = VOTOS.total ? 100 - pSi : 0;
+  return '<div class="slide vota">' +
+    '<div class="vota-wrap">' +
+      '<div class="vota-txt">' +
+        '<div class="eyebrow"><span class="dot"></span>' + (s.eyebrow || '') + '</div>' +
+        '<h1>' + (s.title || '') + '</h1>' +
+        '<div class="vbar vbar-si">' +
+          '<div class="vtop"><span>Sí</span><span id="vSiPct">' + pSi + '%</span></div>' +
+          '<div class="vtrack"><div class="vfill" id="vSiFill" style="width:' + pSi + '%"></div></div>' +
+        '</div>' +
+        '<div class="vbar vbar-no">' +
+          '<div class="vtop"><span>No</span><span id="vNoPct">' + pNo + '%</span></div>' +
+          '<div class="vtrack"><div class="vfill" id="vNoFill" style="width:' + pNo + '%"></div></div>' +
+        '</div>' +
+        '<div class="vtotal" id="vTotal">' + textoTotal() + '</div>' +
+      '</div>' +
+      '<div class="encu-qr">' +
+        '<img src="' + normalizeAsset(s.qr || '') + '" width="340" height="340" alt="Código QR de la votación">' +
+        '<div class="cta">' + (s.cta || '') + '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+// Repinta SOLO las barras, sin volver a dibujar las slides. Si re-dibujáramos con cada voto,
+// la cartelera saltaría a la slide 1 todo el tiempo (el mismo problema que daba updatedAt).
+function updateVotos(v) {
+  if (!v) return;
+  VOTOS = v;
+  var pSi = pctSi();
+  var pNo = VOTOS.total ? 100 - pSi : 0;
+  setTxt('vSiPct', pSi + '%');
+  setTxt('vNoPct', pNo + '%');
+  setTxt('vTotal', textoTotal());
+  var a = document.getElementById('vSiFill');
+  if (a) a.style.width = pSi + '%';
+  var b = document.getElementById('vNoFill');
+  if (b) b.style.width = pNo + '%';
+}
 var BUILDERS = {
   cover: buildCover,
   agenda: buildAgenda,
@@ -575,6 +648,7 @@ var BUILDERS = {
   cumples: buildCumples,
   foto: buildFoto,
   encuesta: buildEncuesta,
+  votacion: buildVotacion,
   info: buildInfo
 };
 
@@ -857,8 +931,16 @@ var DATA_URL = 'https://script.google.com/macros/s/AKfycbxAt5gQYspry28ntaEweGr0W
 var PREVIEW = /[?&]preview=1/.test(location.search);
 function applyData(data) {
   if (data && data.updatedAt) delete data.updatedAt; // campo volátil (cambia en cada consulta): sin esto, el poll de 20 s reiniciaba la cartelera a la slide 1
+  // Los votos también son volátiles: cambian con cada persona que vota. Se sacan del JSON que
+  // se compara y se pintan aparte, si no cada voto reiniciaría el ciclo a la slide 1.
+  var votos = data && data.votos;
+  if (data && data.votos) delete data.votos;
+  if (votos) VOTOS = votos; // antes de makeSlides/render, para que las barras se dibujen al día
   var str = JSON.stringify(data);
-  if (str === lastDataStr) return; // sin cambios -> no re-dibuja
+  if (str === lastDataStr) {
+    updateVotos(votos); // no cambió nada más: solo se mueven las barras, sin re-dibujar
+    return;
+  }
   lastDataStr = str;
   var cfg = data && data.config || {};
   WX.lat = parseFloat(cfg.clima_lat) || -34.6131;
@@ -950,7 +1032,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  var VERSION = '28';
+  var VERSION = '29';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
