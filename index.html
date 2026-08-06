@@ -443,7 +443,10 @@ function makeSlides(data) {
     secs: secsOf("encuesta", 14)
   });
   // Votación Sí/No: el QR abre ?action=votacion y el conteo vuelve por el mismo poll de datos.
-  if (on("pub_votacion")) slides.push({
+  // OJO: a diferencia del resto de las secciones, esta es OPT-IN (default "no"): por ahora la
+  // votación se usa como página suelta, fuera de la cartelera. Para mostrarla en la TV hay que
+  // poner pub_votacion = si en la pestaña Config.
+  if (String(cfg.pub_votacion || "no").trim().toLowerCase() === "si") slides.push({
     type: "votacion",
     eyebrow: "Votación · escaneá y votá",
     title: cfg.votacion_pregunta || "¿Estás para meterle onda a Halloween?",
