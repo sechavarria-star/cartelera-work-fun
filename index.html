@@ -131,12 +131,12 @@
 
   /* CUMPLEAÑOS */
   .cumples{margin-top:10px;overflow:hidden;text-align:center}
-  .cu-track{display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;-webkit-flex-wrap:wrap;flex-wrap:wrap}
+  .cu-track{display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;-webkit-align-items:flex-start;align-items:flex-start;-webkit-flex-wrap:wrap;flex-wrap:wrap;width:100%}
   .cu-track.scroll{-webkit-flex-wrap:nowrap;flex-wrap:nowrap;-webkit-justify-content:flex-start;justify-content:flex-start}
   @-webkit-keyframes cuscroll{from{-webkit-transform:translateX(0)}to{-webkit-transform:translateX(-50%)}}
   @keyframes cuscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  .cu{-webkit-flex:0 0 auto;flex:0 0 auto;width:248px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:28px 22px;margin:0 13px;text-align:center}
-  .cu-photo{width:122px;height:122px;border-radius:50%;background-color:#0c2a66;background-position:center;background-size:cover;background-repeat:no-repeat;border:3px solid #FF5050;box-shadow:0 6px 18px rgba(0,0,0,.3);margin:0 auto}
+  .cu{-webkit-flex:0 0 auto;flex:0 0 auto;width:248px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:28px 22px;margin:0 13px;text-align:center;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;-webkit-align-items:center;align-items:center}
+  .cu-photo{display:block;width:122px;height:122px;border-radius:50%;background-color:#0c2a66;background-position:center center;background-size:cover;background-repeat:no-repeat;border:3px solid #FF5050;box-shadow:0 6px 18px rgba(0,0,0,.3);margin:0 auto}
   .cu-ini{background:#024AD8;line-height:122px;font-size:44px;font-weight:700;color:#fff;text-align:center}
   .cu-name{font-size:25px;font-weight:700;margin-top:18px;line-height:1.15}
   .cu-when{font-size:18px;color:#FF5050;font-weight:600;margin-top:7px}
@@ -1036,7 +1036,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  var VERSION = '30';
+  var VERSION = '31';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
