@@ -40,6 +40,7 @@ Abrí `index.html` con el Bloc de notas y editá **solo** el bloque `const SLIDE
 - `cumples`   cumpleaños del mes — items `{date:"MM-DD", name}` (muestra solo los del mes actual)
 - `countdown` cuenta regresiva — `target: "2026-12-19T19:00:00"`
 - `foto`      foto a pantalla completa — `{src, title, caption}`
+- `fotoCarrusel` álbum de fotos de un evento — `{items:[{src, title, caption}]}`
 - `quote`     frase destacada — `{text, by}`
 - `info`      título + texto libre — `{eyebrow, title, body}`
 
@@ -48,6 +49,34 @@ Abrí `index.html` con el Bloc de notas y editá **solo** el bloque `const SLIDE
 ### Para agregar fotos del equipo
 1. Copiá las imágenes a la carpeta `assets/` (ej. `assets/equipo-1.jpg`).
 2. En `SLIDES` agregá: `{ type:"foto", src:"assets/equipo-1.jpg", title:"...", caption:"...", secs:9 }`.
+
+Desde el Back Office también podés abrir `Fotos`, completar opcionalmente el título del
+evento y usar `Seleccionar hasta 10` para cargar un carrusel. Las fotos seleccionadas
+quedan agrupadas y pasan automáticamente dentro de una misma slide.
+
+### Videos de eventos
+En el Back Office, abrí **Fotos y videos**, elegí **+ Agregar** y **Subir**.
+Seleccioná un MP4 H.264 de hasta **15 MB y 10 minutos**, completá opcionalmente el
+título y guardá con **Guardar y publicar**. Los videos no pasan por el recortador.
+Se muestran completos, sin sonido y sin deformarse; al terminar siguen las otras
+slides. El tiempo por foto no acorta los videos. La barra espaciadora también pausa
+y reanuda el video; las flechas permiten saltearlo.
+
+Para una pieza que ya contiene sus propios textos, dejá el título y el epígrafe
+vacíos. Formato recomendado: **1918 × 643 (3:1)**; H.264 4:2:0 con una fila de borde
+(1918 × 644) ofrece mayor compatibilidad con TVs.
+
+Los MP4 subidos se guardan en la misma carpeta de Drive de las fotos. Se descargan
+al reproductor mediante el Back Office, sin depender de enlaces de reproducción
+de Drive. Se necesita internet para cargarlos. También se acepta una URL directa
+a un MP4, seleccionando **Video** (no enlaces de YouTube ni páginas de Drive).
+Si un archivo no carga en 45 segundos o no se puede reproducir, se informa en pantalla
+y se continúa con la siguiente slide. Los videos no se agrupan en el carrusel de fotos.
+
+Para activar esta función hay que publicar juntos `index.html` y `version.txt`
+en ambos repositorios y actualizar la implementación de Apps Script con
+`backoffice/Admin.html` y `backoffice/Codigo.js`. Las columnas `type` y `duration`
+se agregan al final de Fotos en el siguiente guardado; las fotos existentes se conservan.
 
 ### Cumpleaños
 Cargá todos los del año en la slide `cumples`; la cartelera muestra automáticamente

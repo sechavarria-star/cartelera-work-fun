@@ -207,6 +207,15 @@
   }
   .foto .foto-t{font-size:46px;font-weight:700;line-height:1.08}
   .foto .foto-d{font-size:22px;color:#aab8d6;margin-top:8px}
+  .video-media{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#06122c}
+  .video-status{position:absolute;top:50%;left:8%;right:8%;text-align:center;font-size:24px;color:#aab8d6}
+
+  /* CARRUSEL DE FOTOS: varias fotos del mismo evento dentro de una sola slide. */
+  .foto-carousel .foto-area{position:relative}
+  .foto-carousel-item{position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;transition:opacity .55s ease;-webkit-transition:opacity .55s ease}
+  .foto-carousel-item.active{opacity:1}
+  .foto-carousel-item .foto-blur,.foto-carousel-item .foto-bg{position:absolute;top:0;right:0;bottom:0;left:0}
+  .foto-carousel-count{position:absolute;right:34px;bottom:28px;z-index:3;background:rgba(6,18,44,.78);border:1px solid rgba(255,255,255,.3);border-radius:18px;padding:7px 14px;color:#fff;font-size:18px;font-weight:700;letter-spacing:1px}
 
   /* PIE / PROGRESO */
   .footer{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-flex:0 0 auto;flex:0 0 auto;padding:14px 56px 22px}
@@ -291,6 +300,7 @@ if (window.Element && !Element.prototype.remove) Element.prototype.remove = func
                  muestra automáticamente solo los del mes en curso
      "foto"      foto a pantalla completa (src, title, caption)
                  poné la imagen en la carpeta assets/ y referenciala: src:"assets/equipo.jpg"
+     "fotoCarrusel" álbum de fotos de un evento (items: [{src, title, caption}])
      "info"      título + texto libre
    "secs" = segundos que dura esa slide (opcional, por defecto 10).
    ================================================================= */
@@ -393,17 +403,34 @@ function makeSlides(data) {
     items: data.cumples,
     secs: secsOf("cumples", cuCount > 4 ? cuCount * 3 + 4 : 11)
   });
-  if (on("pub_fotos")) (data.fotos || []).filter(function (f) {
-    return f.src;
-  }).forEach(function (f) {
-    return slides.push({
-      type: "foto",
-      src: f.src,
-      title: f.title || "",
-      caption: f.caption || "",
-      secs: secsOf("fotos", 9)
-    });
-  });
+  if (on("pub_fotos")) {
+    var fotos = (data.fotos || []).filter(function (f) { return f.src; });
+    for (var fi = 0; fi < fotos.length;) {
+      var foto = fotos[fi];
+      if (isVideoMedia(foto)) {
+        var videoSecs = parseFloat(foto.duration);
+        slides.push({ type: 'video', src: foto.src, title: foto.title || '', caption: foto.caption || '', secs: videoSecs > 0 && videoSecs <= 600 ? videoSecs : 30 });
+        fi++;
+      } else if (foto.album) {
+        var album = [], albumId = foto.album;
+        while (fi < fotos.length && fotos[fi].album === albumId && !isVideoMedia(fotos[fi])) album.push(fotos[fi++]);
+        if (album.length > 1) {
+          slides.push({
+            type: "fotoCarrusel",
+            items: album,
+            title: album[0].title || "",
+            caption: album[0].caption || "",
+            secs: secsOf("fotos", 9) * album.length
+          });
+        } else {
+          slides.push({ type: "foto", src: album[0].src, title: album[0].title || "", caption: album[0].caption || "", secs: secsOf("fotos", 9) });
+        }
+      } else {
+        slides.push({ type: "foto", src: foto.src, title: foto.title || "", caption: foto.caption || "", secs: secsOf("fotos", 9) });
+        fi++;
+      }
+    }
+  }
   if (on("clima_activo")) slides.push({
     type: "clima",
     ciudad: cfg.clima_ciudad || "Buenos Aires",
@@ -573,6 +600,27 @@ function buildFoto(s) {
     cap +
     '</div>';
 }
+function buildFotoCarrusel(s) {
+  var items = s.items || [], html = '';
+  items.forEach(function (item, i) {
+    var url = normalizeAsset(item.src || '');
+    html += '<div class="foto-carousel-item' + (i === 0 ? ' active' : '') + '">' +
+      (BLUR_OK ? '<div class="foto-blur" style="background-image:url(\'' + url + '\')"></div>' : '') +
+      '<div class="foto-bg" style="background-image:url(\'' + url + '\')"></div></div>';
+  });
+  var cap = (s.title || s.caption) ? '<div class="foto-cap">' + (s.title ? '<div class="foto-t">' + s.title + '</div>' : '') + (s.caption ? '<div class="foto-d">' + s.caption + '</div>' : '') + '</div>' : '';
+  return '<div class="slide foto foto-carousel"><div class="foto-area">' + html + '<div class="foto-carousel-count">1 / ' + items.length + '</div></div>' + cap + '</div>';
+}
+function isVideoMedia(f) {
+  return f.type === 'video' || /^drive-video:/i.test(f.src || '') || /\.mp4(?:[?#]|$)/i.test(f.src || '');
+}
+function mediaText(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function buildVideo(s) {
+  var cap = (s.title || s.caption) ? '<div class="foto-cap">' + (s.title ? '<div class="foto-t">' + mediaText(s.title) + '</div>' : '') + (s.caption ? '<div class="foto-d">' + mediaText(s.caption) + '</div>' : '') + '</div>' : '';
+  return '<div class="slide foto video-slide"><div class="foto-area"><video class="video-media" muted playsinline webkit-playsinline preload="none"></video><div class="video-status" role="status">Cargando video…</div></div>' + cap + '</div>';
+}
 // ES5 a mano (sin template literals ni arrow functions): corre en el navegador viejo de la TV.
 function buildEncuesta(s) {
   var pasos = (s.pasos || []).map(function (p) {
@@ -651,6 +699,8 @@ var BUILDERS = {
   clima: buildClima,
   cumples: buildCumples,
   foto: buildFoto,
+  fotoCarrusel: buildFotoCarrusel,
+  video: buildVideo,
   encuesta: buildEncuesta,
   votacion: buildVotacion,
   info: buildInfo
@@ -662,6 +712,7 @@ var SLIDES = [],
   dotNodes = [],
   idx = 0,
   paused = false,
+  pausedAt = 0,
   t0 = performance.now(),
   raf,
   weatherOK = false,
@@ -674,6 +725,7 @@ var WX = {
 
 // (re)dibuja todas las slides a partir de SLIDES
 function render() {
+  clearVideos();
   slidesEl.querySelectorAll('.slide').forEach(function (n) {
     return n.remove();
   });
@@ -689,8 +741,97 @@ function render() {
   if (slideNodes.length) {
     slideNodes[0].classList.add('active');
     dotNodes[0].classList.add('on');
+    activateVideo();
   }
   refreshClimaDots();
+}
+function clearVideos() {
+  slidesEl.querySelectorAll('video').forEach(function (video) {
+    video.pause();
+    if (video._cancelLoad) video._cancelLoad();
+    if (video._blobURL) URL.revokeObjectURL(video._blobURL);
+    video.removeAttribute('src');
+    video.load();
+  });
+}
+function activeVideo() {
+  return slideNodes[idx] && slideNodes[idx].querySelector('.video-media');
+}
+function videoError(video) {
+  if (!document.documentElement.contains(video)) return;
+  video._failed = true;
+  var status = video.parentNode.querySelector('.video-status');
+  status.textContent = 'No se pudo reproducir el video. Revisá el archivo y la conexión.';
+  status.style.display = '';
+  if (activeVideo() === video) { SLIDES[idx].secs = 3; t0 = performance.now(); }
+}
+function playVideo(video) {
+  if (activeVideo() !== video || paused || video._failed) return;
+  try {
+    video.muted = true;
+    var playing = video.play();
+    if (playing && playing.catch) playing.catch(function (err) {
+      if (activeVideo() === video && !paused && err.name !== 'AbortError') videoError(video);
+    });
+  } catch (err) { videoError(video); }
+}
+function loadDriveVideo(video, id) {
+  var fn = '__video' + Math.random().toString(36).slice(2), script = document.createElement('script'), done = false, timer;
+  function cleanup() {
+    if (done) return false;
+    done = true; clearTimeout(timer); script.remove();
+    window[fn] = function () {};
+    setTimeout(function () { delete window[fn]; }, 60000);
+    return true;
+  }
+  video._cancelLoad = cleanup;
+  window[fn] = function (data) {
+    if (!cleanup() || !document.documentElement.contains(video)) return;
+    try {
+      if (!data || data.error || data.mime !== 'video/mp4' || !data.base64 || data.base64.length > 21 * 1024 * 1024) throw new Error('Video inválido');
+      var binary = atob(data.base64), bytes = new Uint8Array(binary.length);
+      for (var b = 0; b < binary.length; b++) bytes[b] = binary.charCodeAt(b);
+      video._blobURL = URL.createObjectURL(new Blob([bytes], { type: data.mime }));
+      video.src = video._blobURL;
+      playVideo(video);
+    } catch (err) { videoError(video); }
+  };
+  script.onerror = function () { if (cleanup()) videoError(video); };
+  timer = setTimeout(function () { if (cleanup()) videoError(video); }, 45000);
+  script.src = DATA_URL + '?action=video&id=' + encodeURIComponent(id) + '&callback=' + fn;
+  document.body.appendChild(script);
+}
+function activateVideo() {
+  var video = activeVideo();
+  if (!video) return;
+  var slide = SLIDES[idx];
+  video._started = false;
+  video._waitingAt = performance.now();
+  if (video._failed) { videoError(video); return; }
+  if (!video._setup) {
+    video._setup = true;
+    video.defaultMuted = true; video.muted = true;
+    video.onloadedmetadata = function () {
+      if (!isFinite(video.duration) || video.duration <= 0 || video.duration > 600) { videoError(video); return; }
+      slide.secs = video.duration;
+    };
+    video.oncanplay = function () { playVideo(video); };
+    video.onplaying = function () {
+      if (activeVideo() !== video || paused) { video.pause(); return; }
+      if (!video._started) { video._started = true; t0 = performance.now(); }
+      video._progressAt = performance.now();
+      video.parentNode.querySelector('.video-status').style.display = 'none';
+    };
+    video.onerror = function () { videoError(video); };
+    video.onended = function () { if (activeVideo() === video && !paused) next(); };
+    if (/^drive-video:[\w-]{10,}$/.test(slide.src)) {
+      loadDriveVideo(video, slide.src.slice(12));
+    } else if (/^https?:\/\//i.test(slide.src) || !/^[a-z][a-z0-9+.-]*:/i.test(slide.src)) {
+      video.src = slide.src;
+    } else { videoError(video); }
+  }
+  if (video.readyState > 0) { try { video.currentTime = 0; } catch (err) {} }
+  if (video.getAttribute('src')) playVideo(video);
 }
 // Desplaza el carrusel de cumpleaños en sincronía EXACTA con la barra de tiempo de la slide:
 // arranca en el primer cumpleañero al entrar y termina anclado en los últimos un poco antes
@@ -707,6 +848,16 @@ function driveCumples(p) {
   tr.style.webkitTransform = 'translateX(' + x + 'px)';
   tr.style.transform = 'translateX(' + x + 'px)';
 }
+function driveFotos(p) {
+  var s = SLIDES[idx];
+  if (!s || s.type !== 'fotoCarrusel') return;
+  var nodes = slideNodes[idx].querySelectorAll('.foto-carousel-item');
+  if (!nodes.length) return;
+  var n = Math.min(nodes.length - 1, Math.floor(Math.min(0.9999, p) * nodes.length));
+  for (var i = 0; i < nodes.length; i++) nodes[i].classList.toggle('active', i === n);
+  var counter = slideNodes[idx].querySelector('.foto-carousel-count');
+  if (counter) counter.textContent = (n + 1) + ' / ' + nodes.length;
+}
 // ¿se puede mostrar esta slide? (el clima se saltea si no hay datos / no hay internet)
 function visible(i) {
   return !(SLIDES[i].type === 'clima' && !weatherOK);
@@ -718,12 +869,16 @@ function show(i, dir) {
   while (!visible(n) && guard++ < SLIDES.length) {
     n = (n + dir + SLIDES.length) % SLIDES.length;
   }
+  var outgoingVideo = activeVideo();
+  if (outgoingVideo) outgoingVideo.pause();
   slideNodes[idx].classList.remove('active');
   dotNodes[idx].classList.remove('on');
   idx = n;
   slideNodes[idx].classList.add('active');
   dotNodes[idx].classList.add('on');
   t0 = performance.now();
+  if (paused) pausedAt = t0;
+  activateVideo();
 }
 function next() {
   show(idx + 1, 1);
@@ -732,11 +887,22 @@ function prev() {
   show(idx - 1, -1);
 }
 function loop(now) {
+  var video = activeVideo();
+  if (!paused && video && !video._started && !video._failed) {
+    if (now - video._waitingAt > 45000) videoError(video);
+    else t0 = now;
+  }
   var dur = (SLIDES[idx].secs || DEFAULT_SECS) * 1000;
   if (!paused) {
     var p = Math.min(1, (now - t0) / dur);
+    if (video && video._started && !video._failed) {
+      if (video._lastPosition !== video.currentTime) { video._lastPosition = video.currentTime; video._progressAt = now; }
+      if (now - video._progressAt > 45000) videoError(video);
+      p = Math.min(1, video.currentTime / (SLIDES[idx].secs || DEFAULT_SECS));
+    }
     barEl.style.width = p * 100 + '%';
     driveCumples(p);
+    driveFotos(p);
     if (p >= 1) next();
   }
   updateCountdowns();
@@ -915,6 +1081,9 @@ document.addEventListener('keydown', function (e) {
   var k = (e && e.key) || '';   // el control remoto de algunas TVs manda eventos sin e.key (undefined)
   if (k === 'ArrowRight') next();else if (k === 'ArrowLeft') prev();else if (k === ' ') {
     paused = !paused;
+    var video = activeVideo();
+    if (paused) { pausedAt = performance.now(); if (video) video.pause(); }
+    else { t0 += performance.now() - pausedAt; if (video) { video._waitingAt = performance.now(); video._progressAt = performance.now(); if (video.ended) next(); else playVideo(video); } }
     if (e && e.preventDefault) e.preventDefault();
   } else if ((k || '').toLowerCase() === 'f') {
     if (!document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();else if (document.exitFullscreen) document.exitFullscreen();
@@ -1036,7 +1205,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-  var VERSION = '31';
+var VERSION = '33';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
