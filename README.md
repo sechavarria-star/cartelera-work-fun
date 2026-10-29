@@ -67,8 +67,8 @@ vacíos. Formato recomendado: **1918 × 643 (3:1)**; H.264 4:2:0 con una fila de
 (1918 × 644) ofrece mayor compatibilidad con TVs.
 
 Los MP4 subidos se guardan en la misma carpeta de Drive de las fotos. Se descargan
-al reproductor mediante el Back Office, sin depender de enlaces de reproducción
-de Drive. Se necesita internet para cargarlos. También se acepta una URL directa
+al reproductor mediante el Back Office o la descarga directa de Drive, según el
+navegador. Se necesita internet para cargarlos. También se acepta una URL directa
 a un MP4, seleccionando **Video** (no enlaces de YouTube ni páginas de Drive).
 Si un archivo no carga en 45 segundos o no se puede reproducir, se informa en pantalla
 y se continúa con la siguiente slide. Los videos no se agrupan en el carrusel de fotos.
@@ -87,8 +87,9 @@ visible hasta que el video pueda reproducirse; ya no aparece “Cargando video�
 Los videos preparados se reutilizan durante el ciclo. En el arranque inicial,
 si el primer contenido es un video, todavía se necesita la primera descarga.
 
-Para LG/webOS y NetCast, los videos de Drive se cargan como MP4 en base64,
-evitando las URL `blob:` que algunos modelos no reproducen. Los demás navegadores
+Para LG/webOS y NetCast, los videos de Drive se cargan primero desde la URL
+de descarga directa del MP4, con precarga del reproductor nativo. Si esa fuente
+se rechaza, se prueba el MP4 en base64, evitando las URL `blob:`. Los demás navegadores
 mantienen Blob y prueban la alternativa una sola vez si la fuente se rechaza.
 La precarga, el loop y los límites de duración se mantienen. Es necesario validar
 la reproducción en el modelo real de TV; esta adaptación no cambia el códec.

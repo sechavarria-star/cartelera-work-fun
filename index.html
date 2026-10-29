@@ -781,12 +781,22 @@ function playVideo(video) {
     video.muted = true;
     var source = video.getAttribute('src'), playing = video.play();
     if (playing && playing.catch) playing.catch(function (err) {
-      if (activeVideo() === video && !paused && video.getAttribute('src') === source && err.name !== 'AbortError' && !retryInlineVideo(video)) videoError(video);
+      if (activeVideo() === video && !paused && video.getAttribute('src') === source && err.name !== 'AbortError' && !retryDirectDriveVideo(video) && !retryInlineVideo(video)) videoError(video);
     });
-  } catch (err) { if (!retryInlineVideo(video)) videoError(video); }
+  } catch (err) { if (!retryDirectDriveVideo(video) && !retryInlineVideo(video)) videoError(video); }
 }
 function inlineVideoPreferred() {
   return /web[o0]s|netcast|lg[\s_-]*browser/i.test(navigator.userAgent || '') || !window.URL || !URL.createObjectURL || typeof Blob === 'undefined';
+}
+function retryDirectDriveVideo(video) {
+  if (!video._driveId || !video._directTried || video._directFailed || !document.documentElement.contains(video)) return false;
+  video._directFailed = true;
+  clearTimeout(video._prepareTimer);
+  video._prepareTimer = setTimeout(function () { videoError(video); }, 45000);
+  video.removeAttribute('src');
+  video.load();
+  loadDriveVideo(video, video._driveId);
+  return true;
 }
 function retryInlineVideo(video) {
   if (video._usingInline || !video._inlineSource || !document.documentElement.contains(video)) return false;
@@ -800,6 +810,13 @@ function retryInlineVideo(video) {
   return true;
 }
 function loadDriveVideo(video, id) {
+  if (inlineVideoPreferred() && !video._directTried) {
+    video._driveId = id; video._directTried = true;
+    video.src = 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(id);
+    video.load();
+    playVideo(video);
+    return;
+  }
   var fn = '__video' + Math.random().toString(36).slice(2), script = document.createElement('script'), done = false, timer;
   function cleanup() {
     if (done) return false;
@@ -854,7 +871,7 @@ function prepareVideo(i) {
       video._inlineSource = '';
       video.parentNode.querySelector('.video-status').style.display = 'none';
     };
-    video.onerror = function () { if (!retryInlineVideo(video)) videoError(video); };
+    video.onerror = function () { if (!retryDirectDriveVideo(video) && !retryInlineVideo(video)) videoError(video); };
     video.onended = function () { if (activeVideo() === video && !paused && !slide.loop) next(); };
     if (/^drive-video:[\w-]{10,}$/.test(slide.src)) {
       loadDriveVideo(video, slide.src.slice(12));
@@ -1259,7 +1276,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-var VERSION = '36';
+var VERSION = '37';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>
