@@ -73,6 +73,14 @@ a un MP4, seleccionando **Video** (no enlaces de YouTube ni páginas de Drive).
 Si un archivo no carga en 45 segundos o no se puede reproducir, se informa en pantalla
 y se continúa con la siguiente slide. Los videos no se agrupan en el carrusel de fotos.
 
+Cada video tiene la opción **Repetir en loop**, desactivada por defecto. Al activarla,
+se repite durante el **Tiempo en pantalla** indicado (30 segundos por defecto,
+hasta 600 segundos) y después continúa la cartelera. Con **0 segundos** se repite
+sin límite: se avanza manualmente con las flechas. La barra espaciadora pausa y
+reanuda tanto el video como su tiempo en pantalla. Sin loop se reproduce una vez
+completa, igual que antes. Las columnas `loop` y `loop_seconds` se guardan al final
+de Fotos; las filas existentes siguen sin repetición.
+
 Para activar esta función hay que publicar juntos `index.html` y `version.txt`
 en ambos repositorios y actualizar la implementación de Apps Script con
 `backoffice/Admin.html` y `backoffice/Codigo.js`. Las columnas `type` y `duration`
