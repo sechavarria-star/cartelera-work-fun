@@ -87,6 +87,12 @@ visible hasta que el video pueda reproducirse; ya no aparece “Cargando video�
 Los videos preparados se reutilizan durante el ciclo. En el arranque inicial,
 si el primer contenido es un video, todavía se necesita la primera descarga.
 
+Para LG/webOS y NetCast, los videos de Drive se cargan como MP4 en base64,
+evitando las URL `blob:` que algunos modelos no reproducen. Los demás navegadores
+mantienen Blob y prueban la alternativa una sola vez si la fuente se rechaza.
+La precarga, el loop y los límites de duración se mantienen. Es necesario validar
+la reproducción en el modelo real de TV; esta adaptación no cambia el códec.
+
 Para activar esta función hay que publicar juntos `index.html` y `version.txt`
 en ambos repositorios y actualizar la implementación de Apps Script con
 `backoffice/Admin.html` y `backoffice/Codigo.js`. Las columnas `type` y `duration`
