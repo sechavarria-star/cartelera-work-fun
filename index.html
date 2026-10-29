@@ -622,7 +622,7 @@ function mediaText(s) {
 }
 function buildVideo(s) {
   var cap = (s.title || s.caption) ? '<div class="foto-cap">' + (s.title ? '<div class="foto-t">' + mediaText(s.title) + '</div>' : '') + (s.caption ? '<div class="foto-d">' + mediaText(s.caption) + '</div>' : '') + '</div>' : '';
-  return '<div class="slide foto video-slide"><div class="foto-area"><video class="video-media" muted playsinline webkit-playsinline preload="none"></video><div class="video-status" role="status">Cargando video…</div></div>' + cap + '</div>';
+  return '<div class="slide foto video-slide"><div class="foto-area"><video class="video-media" muted playsinline webkit-playsinline preload="auto"></video><div class="video-status" role="status" style="display:none"></div></div>' + cap + '</div>';
 }
 // ES5 a mano (sin template literals ni arrow functions): corre en el navegador viejo de la TV.
 function buildEncuesta(s) {
@@ -711,6 +711,8 @@ var BUILDERS = {
 
 // estado del motor
 var SLIDES = [],
+  pendingVideoIndex = -1,
+  pendingVideoDir = 1,
   slideNodes = [],
   dotNodes = [],
   idx = 0,
@@ -728,6 +730,7 @@ var WX = {
 
 // (re)dibuja todas las slides a partir de SLIDES
 function render() {
+  pendingVideoIndex = -1;
   clearVideos();
   slidesEl.querySelectorAll('.slide').forEach(function (n) {
     return n.remove();
@@ -745,12 +748,14 @@ function render() {
     slideNodes[0].classList.add('active');
     dotNodes[0].classList.add('on');
     activateVideo();
+    preloadNextVideo();
   }
   refreshClimaDots();
 }
 function clearVideos() {
   slidesEl.querySelectorAll('video').forEach(function (video) {
     video.pause();
+    clearTimeout(video._prepareTimer);
     if (video._cancelLoad) video._cancelLoad();
     if (video._blobURL) URL.revokeObjectURL(video._blobURL);
     video.removeAttribute('src');
@@ -763,6 +768,7 @@ function activeVideo() {
 function videoError(video) {
   if (!document.documentElement.contains(video)) return;
   video._failed = true;
+  clearTimeout(video._prepareTimer);
   var status = video.parentNode.querySelector('.video-status');
   status.textContent = 'No se pudo reproducir el video. Revisá el archivo y la conexión.';
   status.style.display = '';
@@ -796,6 +802,7 @@ function loadDriveVideo(video, id) {
       for (var b = 0; b < binary.length; b++) bytes[b] = binary.charCodeAt(b);
       video._blobURL = URL.createObjectURL(new Blob([bytes], { type: data.mime }));
       video.src = video._blobURL;
+      video.load();
       playVideo(video);
     } catch (err) { videoError(video); }
   };
@@ -804,22 +811,25 @@ function loadDriveVideo(video, id) {
   script.src = DATA_URL + '?action=video&id=' + encodeURIComponent(id) + '&callback=' + fn;
   document.body.appendChild(script);
 }
-function activateVideo() {
-  var video = activeVideo();
-  if (!video) return;
-  var slide = SLIDES[idx];
+function prepareVideo(i) {
+  var video = slideNodes[i] && slideNodes[i].querySelector('.video-media');
+  if (!video || video._setup) return video;
+  var slide = SLIDES[i];
   video.loop = !!slide.loop;
-  video._started = false;
-  video._waitingAt = performance.now();
-  if (video._failed) { videoError(video); return; }
   if (!video._setup) {
     video._setup = true;
+    video._prepareTimer = setTimeout(function () { videoError(video); }, 45000);
     video.defaultMuted = true; video.muted = true;
     video.onloadedmetadata = function () {
       if (!isFinite(video.duration) || video.duration <= 0 || video.duration > 600) { videoError(video); return; }
       if (!slide.loop) slide.secs = video.duration;
     };
-    video.oncanplay = function () { playVideo(video); };
+    video.oncanplay = function () {
+      clearTimeout(video._prepareTimer);
+      if (video._failed) return;
+      if (pendingVideoIndex === i && !paused) show(i, pendingVideoDir);
+      else playVideo(video);
+    };
     video.onplaying = function () {
       if (activeVideo() !== video || paused) { video.pause(); return; }
       if (!video._started) { video._started = true; t0 = performance.now(); }
@@ -832,9 +842,24 @@ function activateVideo() {
       loadDriveVideo(video, slide.src.slice(12));
     } else if (/^https?:\/\//i.test(slide.src) || !/^[a-z][a-z0-9+.-]*:/i.test(slide.src)) {
       video.src = slide.src;
+      video.load();
     } else { videoError(video); }
   }
-  if (video.readyState > 0) { try { video.currentTime = 0; } catch (err) {} }
+  return video;
+}
+function preloadNextVideo() {
+  for (var offset = 1; offset < SLIDES.length; offset++) {
+    var upcoming = (idx + offset) % SLIDES.length;
+    if (visible(upcoming) && SLIDES[upcoming].type === 'video') { prepareVideo(upcoming); return; }
+  }
+}
+function activateVideo() {
+  var video = prepareVideo(idx);
+  if (!video) return;
+  video._started = false;
+  video._waitingAt = performance.now();
+  if (video._failed) { videoError(video); return; }
+  if (video.readyState > 0 && video.currentTime > 0) { try { video.currentTime = 0; } catch (err) {} }
   if (video.getAttribute('src')) playVideo(video);
 }
 // Desplaza el carrusel de cumpleaños en sincronía EXACTA con la barra de tiempo de la slide:
@@ -873,6 +898,12 @@ function show(i, dir) {
   while (!visible(n) && guard++ < SLIDES.length) {
     n = (n + dir + SLIDES.length) % SLIDES.length;
   }
+  pendingVideoIndex = -1;
+  var incomingVideo = prepareVideo(n);
+  if (incomingVideo && !incomingVideo._failed && incomingVideo.readyState < 3) {
+    pendingVideoIndex = n; pendingVideoDir = dir;
+    return;
+  }
   var outgoingVideo = activeVideo();
   if (outgoingVideo) outgoingVideo.pause();
   slideNodes[idx].classList.remove('active');
@@ -883,6 +914,7 @@ function show(i, dir) {
   t0 = performance.now();
   if (paused) pausedAt = t0;
   activateVideo();
+  preloadNextVideo();
 }
 function next() {
   show(idx + 1, 1);
@@ -1209,7 +1241,7 @@ if (PREVIEW) {
   }, 20 * 1000); // consulta cambios cada 20 s
 
   // AUTO-ACTUALIZACIÓN DE CÓDIGO: si subo una versión nueva del diseño, la TV se recarga sola.
-var VERSION = '34';
+var VERSION = '35';
   setInterval(checkVersion, 90 * 1000); // chequea versión cada 90 s
 }
 </script>

@@ -81,6 +81,12 @@ reanuda tanto el video como su tiempo en pantalla. Sin loop se reproduce una vez
 completa, igual que antes. Las columnas `loop` y `loop_seconds` se guardan al final
 de Fotos; las filas existentes siguen sin repetición.
 
+El próximo video se precarga en segundo plano mientras se muestra el contenido
+anterior. Si todavía no está listo al llegar su turno, ese contenido permanece
+visible hasta que el video pueda reproducirse; ya no aparece “Cargando video”.
+Los videos preparados se reutilizan durante el ciclo. En el arranque inicial,
+si el primer contenido es un video, todavía se necesita la primera descarga.
+
 Para activar esta función hay que publicar juntos `index.html` y `version.txt`
 en ambos repositorios y actualizar la implementación de Apps Script con
 `backoffice/Admin.html` y `backoffice/Codigo.js`. Las columnas `type` y `duration`
